@@ -17,3 +17,26 @@ $> go run cmd/iterate/main.go -iterator-uri foursquare:// ~/data/foursquare/parq
 $> go run cmd/iterate/main.go -iterator-uri overture:// ~/data/overture/parquet/*.parquet > /dev/null
 2024/12/24 18:04:48 INFO Time to iterate records count=55527168 time=2m11.528865417s
 ```
+
+### assign-ancestors
+
+```
+#!/bin/sh
+
+TILES=whosonfirst-point-in-polygon-z13-20241213
+DATA=${HOME}/data
+
+ITERATOR=foursquare://
+WORKERS=3
+
+CACHE_SIZE=10000
+
+SPATIAL_DB="pmtiles://?tiles=file://${DATA}/whosonfirst/&database=${TILES}&enable-cache=false&pmtiles-cache-size=${CACHE_SIZE}&zoom=13&layer=whosonfirst"
+		       
+go run cmd/assign-ancestors/main.go \
+   -workers ${WORKERS} \
+   -iterator-uri ${ITERATOR} \
+   -spatial-database-uri "${SPATIAL_DB}" \
+   -properties-reader-uri "sql://sqlite3/geojson/id/body?dsn=${DATA}/whosonfirst/whosonfirst-data-admin-latest.db&parse-uri=true" \
+   $@
+```
