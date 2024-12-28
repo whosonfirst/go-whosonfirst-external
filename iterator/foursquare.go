@@ -102,7 +102,7 @@ func (it *FoursquareIterator) iterate(ctx context.Context, uri string) iter.Seq2
 				Id:        id,
 				Name:      name,
 				Placetype: "venue",
-				Geometry:  &pt,
+				Geometry:  pt,
 			}
 
 			if !yield(r, nil) {
