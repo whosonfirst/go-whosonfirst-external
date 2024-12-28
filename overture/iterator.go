@@ -1,4 +1,4 @@
-package iterator
+package overture
 
 import (
 	"context"
@@ -12,22 +12,23 @@ import (
 	_ "github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
 	"github.com/whosonfirst/go-whosonfirst-external"
+	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 )
 
 type OvertureIterator struct {
-	Iterator
+	iterator.Iterator
 	db *sql.DB
 }
 
 func init() {
 	ctx := context.Background()
-	err := RegisterIterator(ctx, "overture", NewOvertureIterator)
+	err := iterator.RegisterIterator(ctx, "overture", NewOvertureIterator)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewOvertureIterator(ctx context.Context, uri string) (Iterator, error) {
+func NewOvertureIterator(ctx context.Context, uri string) (iterator.Iterator, error) {
 
 	engine := "duckdb"
 	dsn := ""

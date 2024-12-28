@@ -18,7 +18,7 @@ var verbose bool
 func DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("assign")
-	
+
 	fs.StringVar(&spatial_database_uri, "spatial-database-uri", "", "A registered whosonfirst/go-whosonfirst-spatial/database/SpatialDatabase URI to use for perforning reverse geocoding tasks.")
 
 	fs.StringVar(&properties_reader_uri, "properties-reader-uri", "{spatial-database-uri}", "A registered whosonfirst/go-reader.Reader URI for reading properties from parent records. If '{spatial-database-uri}' the spatial database instance will be used to read those properties.")

@@ -6,8 +6,10 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/whosonfirst/go-reader-database-sql"
+	_ "github.com/whosonfirst/go-whosonfirst-external/foursquare"
+	_ "github.com/whosonfirst/go-whosonfirst-external/overture"
 	_ "github.com/whosonfirst/go-whosonfirst-spatial-pmtiles"
-	
+
 	"github.com/whosonfirst/go-whosonfirst-external/app/ancestors/assign"
 )
 

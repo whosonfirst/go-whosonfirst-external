@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	_ "github.com/whosonfirst/go-whosonfirst-external/foursquare"
+	_ "github.com/whosonfirst/go-whosonfirst-external/overture"
+
 	"github.com/whosonfirst/go-whosonfirst-external/app/iterate"
 )
 

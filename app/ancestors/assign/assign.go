@@ -33,8 +33,8 @@ import (
 
 	"github.com/dgraph-io/ristretto/v2"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/paulmach/orb/encoding/wkt"
 	"github.com/paulmach/orb/geojson"
-	"github.com/paulmach/orb/encoding/wkt"	
 	"github.com/sfomuseum/go-csvdict/v2"
 	"github.com/whosonfirst/go-reader"
 	"github.com/whosonfirst/go-whosonfirst-external"
@@ -157,7 +157,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		ParentCache:      parent_cache,
 		PropertiesReader: properties_reader,
 	}
-		
+
 	var csv_wr *csvdict.Writer
 
 	counter := int64(0)
@@ -226,7 +226,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		if r.Geometry != nil {
 			geom = wkt.MarshalString(r.Geometry)
 		}
-		
+
 		count_hiers := len(a.Hierarchies)
 		csv_rows := make([]map[string]string, count_hiers)
 
@@ -235,7 +235,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 			out := map[string]string{
 				"external:id":           r.Id,
-				"external:geometry": geom,
+				"external:geometry":     geom,
 				"wof:hierarchies_count": "0",
 				"wof:hierarchies_idx":   "0",
 				"wof:parent_id":         strconv.FormatInt(a.ParentId, 10),
@@ -257,7 +257,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 				out := map[string]string{
 					"external:id":           r.Id,
-					"external:geometry": geom,					
+					"external:geometry":     geom,
 					"wof:hierarchies_count": strconv.Itoa(count_hiers),
 					"wof:hierarchies_idx":   strconv.Itoa(i),
 					"wof:parent_id":         strconv.FormatInt(a.ParentId, 10),

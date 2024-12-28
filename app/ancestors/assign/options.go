@@ -7,13 +7,13 @@ import (
 )
 
 type RunOptions struct {
-	SpatialDatabaseURI string
+	SpatialDatabaseURI  string
 	PropertiesReaderURI string
-	IteratorURI string
-	IteratorSources []string
-	Workers int
-	StartAfter int64
-	Verbose bool
+	IteratorURI         string
+	IteratorSources     []string
+	Workers             int
+	StartAfter          int64
+	Verbose             bool
 }
 
 func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
@@ -23,13 +23,13 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 	sources := fs.Args()
 
 	opts := &RunOptions{
-		SpatialDatabaseURI: spatial_database_uri,
+		SpatialDatabaseURI:  spatial_database_uri,
 		PropertiesReaderURI: properties_reader_uri,
-		IteratorURI: iterator_uri,
-		IteratorSources: sources,
-		Workers: workers,
-		StartAfter: start_after,
-		Verbose: verbose,
+		IteratorURI:         iterator_uri,
+		IteratorSources:     sources,
+		Workers:             workers,
+		StartAfter:          start_after,
+		Verbose:             verbose,
 	}
 
 	return opts, nil

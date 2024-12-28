@@ -1,4 +1,4 @@
-package iterator
+package foursquare
 
 import (
 	"context"
@@ -11,22 +11,23 @@ import (
 
 	"github.com/paulmach/orb"
 	"github.com/whosonfirst/go-whosonfirst-external"
+	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 )
 
 type FoursquareIterator struct {
-	Iterator
+	iterator.Iterator
 	db *sql.DB
 }
 
 func init() {
 	ctx := context.Background()
-	err := RegisterIterator(ctx, "foursquare", NewFoursquareIterator)
+	err := iterator.RegisterIterator(ctx, "foursquare", NewFoursquareIterator)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewFoursquareIterator(ctx context.Context, uri string) (Iterator, error) {
+func NewFoursquareIterator(ctx context.Context, uri string) (iterator.Iterator, error) {
 
 	engine := "duckdb"
 	dsn := ""
