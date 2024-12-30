@@ -6,6 +6,19 @@ Go package for working with external data sources in a Who's On First context.
 
 Documentation is incomplete.
 
+## Records
+
+```
+type Record interface {
+	Id() string
+	Name() string
+	Placetype() string
+	Namespace() string
+	Geometry() orb.Geometry
+	Properties() map[string]any
+}
+```
+
 ## Tools
 
 ### iterate
@@ -44,3 +57,8 @@ go run cmd/assign-ancestors/main.go \
    -properties-reader-uri "sql://sqlite3/geojson/id/body?dsn=${DATA}/whosonfirst/whosonfirst-data-admin-latest.db&parse-uri=true" \
    $@
 ```
+
+## See also
+
+* https://github.com/whosonfirst/go-whosonfirst-spatial
+* https://github.com/whosonfirst/go-whosonfirst-spatial-pmtiles
