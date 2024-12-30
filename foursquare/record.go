@@ -2,38 +2,36 @@ package foursquare
 
 import (
 	"fmt"
-	
+
 	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/geojson"
 	"github.com/whosonfirst/go-whosonfirst-external"
 )
 
-type FoursquareRecord struct {
-	external.RecordWIP `json:",omitempty"`
-	body string
-}
+const NAMESPACE string = "4sq"
 
-func (r *FoursquareRecord) Id() string {
-	return "4sq:id="
-}
+func NewFoursquareRecord(props map[string]any, geom orb.Geometry) (external.Record, error) {
 
-func (r *FoursquareRecord) Name() string {
-	return ""
-}
+	_, has_id := props["id"]
 
-func (r *FoursquareRecord) Placetype() string {
-	return "venue"
-}
+	if !has_id {
+		return nil, fmt.Errorf("Properties missing id")
+	}
 
-func (r *FoursquareRecord) Geometry() orb.Geometry {
-	return nil
-}
+	_, has_name := props["name"]
 
-func (r *FoursquareRecord) Body() string {
-	return ""
-}
+	if !has_name {
+		return nil, fmt.Errorf("Properties missing name")
+	}
 
-func (r *FoursquareRecord) AsFeature() (*geojson.Feature, error) {
-	return nil, fmt.Errorf("Not implemented")
-}
+	opts := &external.NewExternalRecordOptions{
 
+		Properties: props,
+		Geometry:   geom,
+		Namespace:  NAMESPACE,
+		Placetype:  "venue",
+		IdKey:      "id",
+		NameKey:    "name",
+	}
+
+	return external.NewExternalRecord(opts)
+}

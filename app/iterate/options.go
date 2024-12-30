@@ -9,6 +9,7 @@ import (
 type RunOptions struct {
 	IteratorURI     string
 	IteratorSources []string
+	AsGeoJSONL      bool
 }
 
 func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
@@ -20,6 +21,7 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 	opts := &RunOptions{
 		IteratorURI:     iterator_uri,
 		IteratorSources: sources,
+		AsGeoJSONL:      as_geojsonl,
 	}
 
 	return opts, nil

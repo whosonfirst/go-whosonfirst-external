@@ -13,7 +13,7 @@ import (
 )
 
 type Iterator interface {
-	Iterate(context.Context, ...string) iter.Seq2[*external.Record, error]
+	Iterate(context.Context, ...string) iter.Seq2[external.Record, error]
 	Close() error
 }
 

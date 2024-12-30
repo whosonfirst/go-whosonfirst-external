@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/whosonfirst/go-whosonfirst-external"
 	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 )
 
@@ -51,10 +52,27 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			return err
 		}
 
-		err = enc.Encode(r)
+		if opts.AsGeoJSONL {
 
-		if err != nil {
-			return err
+			f, err := external.AsGeoJSONFeature(r)
+
+			if err != nil {
+				return err
+			}
+
+			err = enc.Encode(f)
+
+			if err != nil {
+				return err
+			}
+
+		} else {
+
+			err = enc.Encode(r)
+
+			if err != nil {
+				return err
+			}
 		}
 
 		atomic.AddInt64(&count, 1)

@@ -79,19 +79,19 @@ type DeriveAncestorsOptions struct {
 	PropertiesReader reader.Reader
 }
 
-func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r *external.Record) (*Ancestors, error) {
+func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r external.Record) (*Ancestors, error) {
 
 	logger := slog.Default()
-	logger = logger.With("id", r.Id)
+	logger = logger.With("id", r.Id())
 
 	parent_id := int64(-1)
 	hierarchies := make([]map[string]int64, 0)
 
-	f := geojson.NewFeature(r.Geometry)
+	f := geojson.NewFeature(r.Geometry())
 
-	f.Properties["wof:id"] = r.Id
-	f.Properties["wof:name"] = r.Name
-	f.Properties["wof:placetype"] = r.Placetype
+	f.Properties["wof:id"] = r.Id()
+	f.Properties["wof:name"] = r.Name()
+	f.Properties["wof:placetype"] = r.Placetype()
 
 	body, err := f.MarshalJSON()
 

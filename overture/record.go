@@ -2,38 +2,36 @@ package overture
 
 import (
 	"fmt"
-	
+
 	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/geojson"
 	"github.com/whosonfirst/go-whosonfirst-external"
 )
 
-type OvertureRecord struct {
-	external.RecordWIP `json:",omitempty"`
-	body string
-}
+const NAMESPACE string = "ovtr"
 
-func (r *OvertureRecord) Id() string {
-	return "4sq:id="
-}
+func NewOvertureRecord(props map[string]any, geom orb.Geometry) (external.Record, error) {
 
-func (r *OvertureRecord) Name() string {
-	return ""
-}
+	_, has_id := props["id"]
 
-func (r *OvertureRecord) Placetype() string {
-	return "venue"
-}
+	if !has_id {
+		return nil, fmt.Errorf("Properties missing id")
+	}
 
-func (r *OvertureRecord) Geometry() orb.Geometry {
-	return nil
-}
+	_, has_name := props["name"]
 
-func (r *OvertureRecord) Body() string {
-	return ""
-}
+	if !has_name {
+		return nil, fmt.Errorf("Properties missing name")
+	}
 
-func (r *OvertureRecord) AsFeature() (*geojson.Feature, error) {
-	return nil, fmt.Errorf("Not implemented")
-}
+	opts := &external.NewExternalRecordOptions{
 
+		Properties: props,
+		Geometry:   geom,
+		Namespace:  NAMESPACE,
+		Placetype:  "place",
+		IdKey:      "id",
+		NameKey:    "name",
+	}
+
+	return external.NewExternalRecord(opts)
+}

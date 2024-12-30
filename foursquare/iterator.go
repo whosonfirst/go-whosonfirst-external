@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"iter"
 	"log/slog"
+	"net/url"
 
 	_ "github.com/marcboeker/go-duckdb"
 
@@ -29,6 +30,16 @@ func init() {
 
 func NewFoursquareIterator(ctx context.Context, uri string) (iterator.Iterator, error) {
 
+	u, err := url.Parse(uri)
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse URI, %w", err)
+	}
+
+	if u.Host != "parquet" {
+		return nil, fmt.Errorf("Unsupported data type")
+	}
+
 	engine := "duckdb"
 	dsn := ""
 
@@ -45,9 +56,9 @@ func NewFoursquareIterator(ctx context.Context, uri string) (iterator.Iterator, 
 	return it, nil
 }
 
-func (it *FoursquareIterator) Iterate(ctx context.Context, uris ...string) iter.Seq2[*external.Record, error] {
+func (it *FoursquareIterator) Iterate(ctx context.Context, uris ...string) iter.Seq2[external.Record, error] {
 
-	return func(yield func(*external.Record, error) bool) {
+	return func(yield func(external.Record, error) bool) {
 
 		for _, uri := range uris {
 
@@ -61,14 +72,14 @@ func (it *FoursquareIterator) Iterate(ctx context.Context, uris ...string) iter.
 	}
 }
 
-func (it *FoursquareIterator) iterate(ctx context.Context, uri string) iter.Seq2[*external.Record, error] {
+func (it *FoursquareIterator) iterate(ctx context.Context, uri string) iter.Seq2[external.Record, error] {
 
 	// SELECT fsq_place_id, name, ifnull(latitude, 0.0), ifnull(longitude, 0.0) FROM read_parquet('/usr/local/data/foursquare/parquet/*.parquet')
 
 	logger := slog.Default()
 	logger = logger.With("uri", uri)
 
-	return func(yield func(*external.Record, error) bool) {
+	return func(yield func(external.Record, error) bool) {
 
 		q := fmt.Sprintf(`SELECT fsq_place_id, name, ifnull(latitude, 0.0), ifnull(longitude, 0.0) FROM read_parquet('%s')`, uri)
 
@@ -99,11 +110,16 @@ func (it *FoursquareIterator) iterate(ctx context.Context, uri string) iter.Seq2
 
 			pt := orb.Point([]float64{lon, lat})
 
-			r := &external.Record{
-				Id:        id,
-				Name:      name,
-				Placetype: "venue",
-				Geometry:  pt,
+			props := map[string]any{
+				"id":   id,
+				"name": name,
+			}
+
+			r, err := NewFoursquareRecord(props, pt)
+
+			if err != nil {
+				yield(nil, err)
+				return
 			}
 
 			if !yield(r, nil) {

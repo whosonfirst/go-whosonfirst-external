@@ -204,7 +204,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		"empire_id",
 	}
 
-	process_record := func(ctx context.Context, r *external.Record) error {
+	process_record := func(ctx context.Context, r external.Record) error {
 
 		t1 := time.Now()
 
@@ -223,8 +223,8 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 		geom := ""
 
-		if r.Geometry != nil {
-			geom = wkt.MarshalString(r.Geometry)
+		if r.Geometry() != nil {
+			geom = wkt.MarshalString(r.Geometry())
 		}
 
 		count_hiers := len(a.Hierarchies)
@@ -234,7 +234,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		case 0:
 
 			out := map[string]string{
-				"external:id":           r.Id,
+				"external:id":           r.Id(),
 				"external:geometry":     geom,
 				"wof:hierarchies_count": "0",
 				"wof:hierarchies_idx":   "0",
@@ -256,7 +256,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			for i, h := range a.Hierarchies {
 
 				out := map[string]string{
-					"external:id":           r.Id,
+					"external:id":           r.Id(),
 					"external:geometry":     geom,
 					"wof:hierarchies_count": strconv.Itoa(count_hiers),
 					"wof:hierarchies_idx":   strconv.Itoa(i),
@@ -323,7 +323,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 		wg.Add(1)
 
-		go func(r *external.Record) {
+		go func(r external.Record) {
 
 			defer func() {
 				throttle <- true

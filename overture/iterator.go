@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"iter"
 	"log/slog"
+	"net/url"
 
 	_ "github.com/marcboeker/go-duckdb"
 
@@ -29,6 +30,20 @@ func init() {
 }
 
 func NewOvertureIterator(ctx context.Context, uri string) (iterator.Iterator, error) {
+
+	u, err := url.Parse(uri)
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse URI, %w", err)
+	}
+
+	if u.Host != "parquet" {
+		return nil, fmt.Errorf("Unsupported data type")
+	}
+
+	if u.Path != "/places" {
+		return nil, fmt.Errorf("Unsupported place type")
+	}
 
 	engine := "duckdb"
 	dsn := ""
@@ -71,9 +86,9 @@ func NewOvertureIterator(ctx context.Context, uri string) (iterator.Iterator, er
 	return it, nil
 }
 
-func (it *OvertureIterator) Iterate(ctx context.Context, uris ...string) iter.Seq2[*external.Record, error] {
+func (it *OvertureIterator) Iterate(ctx context.Context, uris ...string) iter.Seq2[external.Record, error] {
 
-	return func(yield func(*external.Record, error) bool) {
+	return func(yield func(external.Record, error) bool) {
 
 		for _, uri := range uris {
 
@@ -88,14 +103,14 @@ func (it *OvertureIterator) Iterate(ctx context.Context, uris ...string) iter.Se
 	}
 }
 
-func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[*external.Record, error] {
+func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[external.Record, error] {
 
 	// SELECT id, names.primary AS name, ST_AsGeoJSON(geometry) AS geometry FROM read_parquet('/usr/local/overture/parquet/*.parquet') LIMIT 5;
 
 	logger := slog.Default()
 	logger = logger.With("uri", uri)
 
-	return func(yield func(*external.Record, error) bool) {
+	return func(yield func(external.Record, error) bool) {
 
 		q := fmt.Sprintf(`SELECT id, names.primary AS name, ST_AsGeoJSON(geometry) AS geometry FROM read_parquet('%s')`, uri)
 		rows, err := it.db.QueryContext(ctx, q)
@@ -132,11 +147,16 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[*
 				return
 			}
 
-			r := &external.Record{
-				Id:        id,
-				Name:      name,
-				Placetype: "venue",
-				Geometry:  f.Geometry,
+			props := map[string]any{
+				"id":   id,
+				"name": name,
+			}
+
+			r, err := NewOvertureRecord(props, f.Geometry)
+
+			if err != nil {
+				yield(nil, err)
+				return
 			}
 
 			if !yield(r, nil) {
