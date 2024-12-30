@@ -38,7 +38,6 @@ import (
 	"github.com/sfomuseum/go-csvdict/v2"
 	"github.com/whosonfirst/go-reader"
 	"github.com/whosonfirst/go-whosonfirst-external"
-	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 	"github.com/whosonfirst/go-whosonfirst-external/whosonfirst"
 	"github.com/whosonfirst/go-whosonfirst-spatial/database"
 	"github.com/whosonfirst/go-whosonfirst-spatial/hierarchy"
@@ -89,7 +88,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 	// END OF json wah-wah...
 
-	iter, err := iterator.NewIterator(ctx, opts.IteratorURI)
+	iter, err := external.NewIterator(ctx, opts.IteratorURI)
 
 	if err != nil {
 		return fmt.Errorf("%w", err)

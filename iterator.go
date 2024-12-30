@@ -1,4 +1,4 @@
-package iterator
+package external
 
 import (
 	"context"
@@ -9,11 +9,10 @@ import (
 	"strings"
 
 	"github.com/aaronland/go-roster"
-	"github.com/whosonfirst/go-whosonfirst-external"
 )
 
 type Iterator interface {
-	Iterate(context.Context, ...string) iter.Seq2[external.Record, error]
+	Iterate(context.Context, ...string) iter.Seq2[Record, error]
 	Close() error
 }
 

@@ -13,23 +13,22 @@ import (
 	_ "github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
 	"github.com/whosonfirst/go-whosonfirst-external"
-	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 )
 
 type OvertureIterator struct {
-	iterator.Iterator
+	external.Iterator
 	db *sql.DB
 }
 
 func init() {
 	ctx := context.Background()
-	err := iterator.RegisterIterator(ctx, "overture", NewOvertureIterator)
+	err := external.RegisterIterator(ctx, "overture", NewOvertureIterator)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewOvertureIterator(ctx context.Context, uri string) (iterator.Iterator, error) {
+func NewOvertureIterator(ctx context.Context, uri string) (external.Iterator, error) {
 
 	u, err := url.Parse(uri)
 

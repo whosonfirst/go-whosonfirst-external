@@ -12,23 +12,22 @@ import (
 
 	"github.com/paulmach/orb"
 	"github.com/whosonfirst/go-whosonfirst-external"
-	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 )
 
 type FoursquareIterator struct {
-	iterator.Iterator
+	external.Iterator
 	db *sql.DB
 }
 
 func init() {
 	ctx := context.Background()
-	err := iterator.RegisterIterator(ctx, "foursquare", NewFoursquareIterator)
+	err := external.RegisterIterator(ctx, "foursquare", NewFoursquareIterator)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewFoursquareIterator(ctx context.Context, uri string) (iterator.Iterator, error) {
+func NewFoursquareIterator(ctx context.Context, uri string) (external.Iterator, error) {
 
 	u, err := url.Parse(uri)
 

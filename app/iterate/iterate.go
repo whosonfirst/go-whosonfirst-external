@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/whosonfirst/go-whosonfirst-external"
-	"github.com/whosonfirst/go-whosonfirst-external/iterator"
 )
 
 func Run(ctx context.Context) error {
@@ -31,7 +30,7 @@ func RunWithFlagSet(ctx context.Context, fs *flag.FlagSet) error {
 
 func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
-	iter, err := iterator.NewIterator(ctx, opts.IteratorURI)
+	iter, err := external.NewIterator(ctx, opts.IteratorURI)
 
 	if err != nil {
 		return err
@@ -52,7 +51,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			return err
 		}
 
-		if opts.AsGeoJSONL {
+		if opts.AsGeoJSON {
 
 			f, err := external.AsGeoJSONFeature(r)
 

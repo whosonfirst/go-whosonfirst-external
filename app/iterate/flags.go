@@ -7,13 +7,13 @@ import (
 )
 
 var iterator_uri string
-var as_geojsonl bool
+var as_geojson bool
 
 func DefaultFlagSet() *flag.FlagSet {
 
 	fs := flagset.NewFlagSet("iterate")
 
-	fs.StringVar(&iterator_uri, "iterator-uri", "", "...")
-	fs.BoolVar(&as_geojsonl, "as-geojsonl", false, "...")
+	fs.StringVar(&iterator_uri, "iterator-uri", "", "A registered whosonfirst/go-whosonfirst-external/iterator.")
+	fs.BoolVar(&as_geojson, "as-geojson", false, "Emit records as GeoJSON Features.")
 	return fs
 }

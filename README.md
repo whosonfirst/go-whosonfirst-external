@@ -6,7 +6,24 @@ Go package for working with external data sources in a Who's On First context.
 
 Documentation is incomplete.
 
-## Records
+## Interfaces
+
+This packages uses a handful of interface definitions to hide the details of any one external data source. Each external data source provides its own implementation of these interfaces. 
+
+### Iterators
+
+Iterators are used to walk (crawl, iterate) a collection of records from an external data source.
+
+```
+type Iterator interface {
+	Iterate(context.Context, ...string) iter.Seq2[Record, error]
+	Close() error
+}
+```
+
+### Records
+
+Records are the common interface for a location defined by an external data source.
 
 ```
 type Record interface {
@@ -17,6 +34,34 @@ type Record interface {
 	Geometry() orb.Geometry
 	Properties() map[string]any
 }
+```
+
+_If you are reading this then it means this interface stands a good chance of changing still._
+
+## Providers
+
+Implementations of the above-mention interfaces are available for the following external data sources. Provider-specific implementations are identified by a URI which takes the form of:
+
+```
+{PROVIDER} + "//" + {DATA_FORMAT} + "/" + {OPTIONAL_PLACETYPE} + "?" + {OPTIONAL_QUERY_PARAMETERS}
+```
+
+Where `{PROVIDER}` is the unique label (scheme) for the external data source, `{DATA_FORMAT}` is the data format that the external data is encoded in and `{OPTIONAL_PLACETYPE}` is an additional per-provider placetype filter.
+
+### Foursquare
+
+Implement the `go-whosonfirst-external` interfaces for [Foursquare's Open Source POI dataset](https://opensource.foursquare.com/os-places/).
+
+```
+foursquare://parquet
+```
+
+### Overture
+
+Implement the `go-whosonfirst-external` interfaces for [Overture Data's Places dataset](https://docs.overturemaps.org/guides/places/).
+
+```
+overture://parquet/places
 ```
 
 ## Tools
@@ -62,3 +107,5 @@ go run cmd/assign-ancestors/main.go \
 
 * https://github.com/whosonfirst/go-whosonfirst-spatial
 * https://github.com/whosonfirst/go-whosonfirst-spatial-pmtiles
+* https://opensource.foursquare.com/os-places/
+* https://docs.overturemaps.org/guides/places/
