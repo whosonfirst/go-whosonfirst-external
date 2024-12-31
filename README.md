@@ -56,7 +56,38 @@ Implement the `go-whosonfirst-external` interfaces for [Foursquare's Open Source
 foursquare://parquet
 ```
 
-_As of this writing the Foursquare iterator only emits the id, name and geometry (derived from latitude and longitude) Foursquare POI properties._
+By default the Foursquare iterator only emits the id, name and geometry (derived from the latitude and longitude) properties. For example:
+
+```
+$> go run cmd/iterate/main.go -iterator-uri 'foursquare://parquet' ~/data/foursquare/parquet/*.parquet
+
+{"properties":{"id":"4878c69f3d6c44dbc55b277e","name":"Huge Brands"},"geometry":[0,0]}
+{"properties":{"id":"aef27cd85bb544efb68fa03a","name":"Альфа"},"geometry":[0,0]}
+{"properties":{"id":"16c1ee7ff3e046d162b771fc","name":"СТИПЛ"},"geometry":[0,0]}
+{"properties":{"id":"14f4601b631548f6bb6a9e56","name":"Advance Auto Parts"},"geometry":[0,0]}
+{"properties":{"id":"5a26cf2c9de23b0468340907","name":"Ziemasprieki"},"geometry":[0,0]}
+{"properties":{"id":"4c913ad8b641236a03b97f79","name":"Richmond Tires - playaz only"},"geometry":[-122.35356862771455,37.95792449892255]}
+{"properties":{"id":"9cad9bae8344473ed53e4b10","name":"Safe Harbor Project"},"geometry":[-122.79330140132753,38.56842541968038]}
+{"properties":{"id":"e36f619d4357549cb86ba73c","name":"Tesco Chelmsford 2"},"geometry":[0,0]}
+{"properties":{"id":"13e58c07ea76461a291e7bb6","name":"Www.blackbeardesign.com"},"geometry":[0,0]}
+{"properties":{"id":"50faaecb460e4ce7e44d5b09","name":"Servicios Marinos del Golfo"},"geometry":[0,0]}
+{"properties":{"id":"4b95c216f964a52034b234e3","name":"Cafe Martin"},"geometry":[-122.71260890434607,38.438739037633034]}
+... and so on
+```
+
+To export all the properties associated with a Foursquare POI pass the `?properties=all` query parameter to the iterator URI. For example:
+
+```
+$>  go run cmd/iterate/main.go -iterator-uri 'foursquare://parquet?properties=all' ~/data/foursquare/parquet/*.parquet | less
+
+{"properties":{"address":"4910 W Amelia Earhart Dr","admin_region":"","category_ids":["52f2ab2ebcbc57f1066b8b28"],"category_labels":["Retail \u003e Print Store"],"country":"US","date_closed":"","date_created":"2020-02-03","date_refreshed":"2023-12-02","facebook_id":0,"id":"4878c69f3d6c44dbc55b277e","instagram":"","locality":"Salt Lake City","name":"Huge Brands","po_box":"","post_town":"","postcode":"84116","region":"UT","tel":"(801) 355-0331","twitter":"","website":"https://www.hugebrands.com"},"geometry":[0,0]}
+{"properties":{"address":"Фрунзе Ул., д. 5","admin_region":"","category_ids":["63be6904847c3692a84b9b98"],"category_labels":["Business and Professional Services \u003e Wholesaler"],"country":"RU","date_closed":"","date_created":"2013-10-30","date_refreshed":"2023-12-06","facebook_id":0,"id":"aef27cd85bb544efb68fa03a","instagram":"","locality":"Новосибирск","name":"Альфа","po_box":"","post_town":"","postcode":"630091","region":"Новосибирская область","tel":"","twitter":"","website":"http://www.alaba.ru"},"geometry":[0,0]}
+{"properties":{"address":"Ленинский Пр., 18","admin_region":"","category_ids":[],"category_labels":[],"country":"RU","date_closed":"","date_created":"2023-12-06","date_refreshed":"2023-12-06","facebook_id":0,"id":"16c1ee7ff3e046d162b771fc","instagram":"","locality":"Москва","name":"СТИПЛ","po_box":"","post_town":"","postcode":"119071","region":"Москва","tel":"","twitter":"","website":""},"geometry":[0,0]}
+{"properties":{"address":"485 US Highway 1","admin_region":"","category_ids":["63be6904847c3692a84b9be6"],"category_labels":["Retail \u003e Automotive Retail \u003e Car Parts and Accessories"],"country":"US","date_closed":"","date_created":"2021-12-02","date_refreshed":"2023-11-29","facebook_id":0,"id":"14f4601b631548f6bb6a9e56","instagram":"","locality":"Edison","name":"Advance Auto Parts","po_box":"","post_town":"","postcode":"08817","region":"NJ","tel":"(732) 985-3308","twitter":"","website":"https://stores.advanceautoparts.com/nj/edison/485-route-1-s"},"geometry":[0,0]}
+{"properties":{"address":"Aroniju Iela 279","admin_region":"","category_ids":[],"category_labels":[],"country":"","date_closed":"","date_created":"2017-12-05","date_refreshed":"2020-11-22","facebook_id":0,"id":"5a26cf2c9de23b0468340907","instagram":"","locality":"Aizkraukle","name":"Ziemasprieki","po_box":"","post_town":"","postcode":"5101","region":"Aizkraukles novads","tel":"","twitter":"","website":""},"geometry":[0,0]}
+{"properties":{"address":"1608 Market Ave","admin_region":"","category_ids":["52f2ab2ebcbc57f1066b8b44"],"category_labels":["Business and Professional Services \u003e Automotive Service \u003e Automotive Repair Shop"],"country":"US","date_closed":"","date_created":"2010-09-15","date_refreshed":"2024-10-15","facebook_id":169088089774148,"id":"4c913ad8b641236a03b97f79","instagram":"","locality":"San Pablo","name":"Richmond Tires - playaz only","po_box":"","post_town":"","postcode":"94806","region":"CA","tel":"(510) 237-2712","twitter":"","website":"http://www.bureaumembers.com/richmondtire"},"geometry":[-122.35356862771455,37.95792449892255]}
+... and so on
+```
 
 ### Overture
 
@@ -66,7 +97,7 @@ Implement the `go-whosonfirst-external` interfaces for [Overture Data's Places d
 overture://parquet/places
 ```
 
-_As of this writing the Foursquare iterator only emits the id, name and geometry Overture Data properties._
+_As of this writing the Overture iterator only emits the id, name and geometry Overture Data properties._
 
 ## DuckDB
 
