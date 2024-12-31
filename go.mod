@@ -10,6 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/paulmach/orb v0.11.1
 	github.com/sfomuseum/go-csvdict/v2 v2.0.1
+	github.com/sfomuseum/go-database v0.0.11
 	github.com/sfomuseum/go-flags v0.10.0
 	github.com/whosonfirst/go-reader v1.0.2
 	github.com/whosonfirst/go-reader-database-sql v0.2.0
@@ -122,7 +123,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/schollz/progressbar/v3 v3.13.1 // indirect
-	github.com/sfomuseum/go-database v0.0.10 // indirect
 	github.com/sfomuseum/go-edtf v1.2.1 // indirect
 	github.com/sfomuseum/go-sfomuseum-mapshaper v0.0.3 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect

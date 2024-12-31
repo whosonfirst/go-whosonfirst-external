@@ -97,7 +97,23 @@ Implement the `go-whosonfirst-external` interfaces for [Overture Data's Places d
 overture://parquet/places
 ```
 
-_As of this writing the Overture iterator only emits the id, name and geometry Overture Data properties._
+As of this writing the Overture iterator only emits the id, name and geometry Overture Data properties. For example:
+
+```
+$> go run cmd/iterate/main.go -iterator-uri overture://parquet/places ~/data/overture/parquet/*.parquet 
+{"properties":{"id":"08ff39bac830c5900361ff7fe23acab8","name":"KK Beauty Shop 2"},"geometry":[-179.13203,-84.5792175]}
+{"properties":{"id":"08ff39baeda4a2580336eaa84afac259","name":"Бряг Дуфек"},"geometry":[-179,-84.5]}
+{"properties":{"id":"08ff39b25c2a605003370aee0592a959","name":"Capta Art Deals"},"geometry":[-178.3849454,-84.8698703]}
+{"properties":{"id":"08ff2a6c8134db4303566a1fd3d15e4d","name":"Gerasimou-Gletscher"},"geometry":[-177.05,-84.7]}
+{"properties":{"id":"08ff2a6c6c5008e003dd18787bcac2d1","name":"La Fuente del Negocio"},"geometry":[-174.5272207,-84.5147528]}
+{"properties":{"id":"08ff2a6c6c762411031de95c443cb06e","name":"Cape Surprise"},"geometry":[-174.417,-84.5167]}
+{"properties":{"id":"08ff2a654811b714035ca8aff0f891d2","name":"Mount Wade"},"geometry":[-174.31667,-84.85]}
+{"properties":{"id":"08ff2a672522b46503151e1a75c8a756","name":"Krout Glacier"},"geometry":[-172.2,-84.8833]}
+{"properties":{"id":"08ff2a61551312cd03aaa36ce434fae1","name":"Real Reels Motion Pictures"},"geometry":[-171.8789095,-84.5735595]}
+{"properties":{"id":"08ff2a674586b8a40349a8ef35a45a92","name":"Mount Hall"},"geometry":[-170.367,-84.9167]}
+... and so on
+```
+
 
 ## DuckDB
 

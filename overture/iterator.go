@@ -3,21 +3,26 @@ package overture
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"iter"
 	"log/slog"
 	"net/url"
+	"strings"
 
 	_ "github.com/marcboeker/go-duckdb"
 
-	_ "github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
+	sfom_sql "github.com/sfomuseum/go-database/sql"
 	"github.com/whosonfirst/go-whosonfirst-external"
 )
 
+const all_properties string = "all"
+
 type OvertureIterator struct {
 	external.Iterator
-	db *sql.DB
+	db         *sql.DB
+	properties string
 }
 
 func init() {
@@ -44,6 +49,10 @@ func NewOvertureIterator(ctx context.Context, uri string) (external.Iterator, er
 		return nil, fmt.Errorf("Unsupported place type")
 	}
 
+	q := u.Query()
+
+	properties := q.Get("properties")
+
 	engine := "duckdb"
 	dsn := ""
 
@@ -53,33 +62,15 @@ func NewOvertureIterator(ctx context.Context, uri string) (external.Iterator, er
 		return nil, err
 	}
 
-	extensions := []string{
-		"SPATIAL",
+	err = sfom_sql.LoadDuckDBExtentions(ctx, db, "SPATIAL")
+
+	if err != nil {
+		return nil, err
 	}
-
-	// START OF put me in sfomuseum/go-database
-
-	for _, ext := range extensions {
-
-		commands := []string{
-			fmt.Sprintf("INSTALL %s", ext),
-			fmt.Sprintf("LOAD %s", ext),
-		}
-
-		for _, cmd := range commands {
-
-			_, err := db.ExecContext(ctx, cmd)
-
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	// END OF put me in sfomuseum/go-database
 
 	it := &OvertureIterator{
-		db: db,
+		db:         db,
+		properties: properties,
 	}
 
 	return it, nil
@@ -111,7 +102,46 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 
 	return func(yield func(external.Record, error) bool) {
 
-		q := fmt.Sprintf(`SELECT id, names.primary AS name, ST_AsGeoJSON(geometry) AS geometry FROM read_parquet('%s')`, uri)
+		props := []string{
+			"id",
+			"names.primary AS name",
+			"ST_AsGeoJSON(geometry) AS geometry",
+		}
+
+		if it.properties == all_properties {
+
+			/*
+
+						Wut... ??
+
+			> go run cmd/iterate/main.go -iterator-uri 'overture://parquet/places?properties=all' ~/data/overture/parquet/*.parquet
+			2024/12/31 09:32:04 ERROR Failed to scan row uri=/Users/asc/data/overture/parquet/part-00000-9b3cb01a-46a1-4378-9e77-baca19283b5a-c000.zstd.parquet error="sql: Scan error on column index 5, name \"\\\"json\\\"(\\\"names\\\")\": destination not a pointer"
+			2024/12/31 09:32:04 INFO Time to iterate records count=0 time=2.324170458s
+			2024/12/31 09:32:04 Failed to iterate records, sql: Scan error on column index 5, name "\"json\"(\"names\")": destination not a pointer
+			exit status 1
+
+			*/
+
+			other_props := []string{
+				"version",
+				"JSON(sources)",
+				"JSON(names)",
+				"JSON(categories)",
+				"confidence",
+				"JSON(websites)",
+				"JSON(socials)",
+				"JSON(emails)",
+				"JSON(phones)",
+				"JSON(brand)",
+				"JSON(addresses)",
+			}
+
+			props = append(props, other_props...)
+		}
+
+		str_props := strings.Join(props, ",")
+
+		q := fmt.Sprintf(`SELECT %s FROM read_parquet('%s')`, str_props, uri)
 		rows, err := it.db.QueryContext(ctx, q)
 
 		if err != nil {
@@ -124,19 +154,166 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 
 		for rows.Next() {
 
-			var id string
-			var name string
-			var geom string
+			var props map[string]any
+			var str_geom string
 
-			err := rows.Scan(&id, &name, &geom)
+			if it.properties == all_properties {
 
-			if err != nil {
-				logger.Error("Failed to scan row", "error", err)
-				yield(nil, err)
-				return
+				var id string
+				var name string
+				// str_geom defined above
+				var version int
+				var str_sources string
+				var str_names string
+				var str_categories string
+				var confidence float32
+				var str_websites string
+				var str_socials string
+				var str_emails string
+				var str_phones string
+				var str_brand string
+				var str_addresses string
+
+				err := rows.Scan(
+					&id, &name, &str_geom, &version,
+					&str_sources, str_names, &str_categories,
+					&confidence,
+					&str_websites, &str_socials, &str_emails, &str_phones,
+					&str_brand, &str_addresses,
+				)
+
+				if err != nil {
+					logger.Error("Failed to scan row", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				logger = logger.With("id", id)
+
+				// To do: Add types mapped to the Overture schema
+
+				var sources map[string]any
+				var names map[string]any
+				var categories map[string]any
+
+				var websites []string
+				var socials []string
+				var emails []string
+				var phones []string
+
+				var brand map[string]any
+				var addresses map[string]any
+
+				err = json.Unmarshal([]byte(str_sources), &sources)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal sources", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_names), &names)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal names", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_categories), &categories)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal categories", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_websites), &websites)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal websites", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_socials), &socials)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal socials", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_emails), &emails)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal emails", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_phones), &phones)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal phones", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_brand), &brand)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal brands", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				err = json.Unmarshal([]byte(str_addresses), &addresses)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal addresses", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				props = map[string]any{
+					"id":         id,
+					"name":       name,
+					"version":    version,
+					"confidence": confidence,
+					"sources":    sources,
+					"names":      names,
+					"categories": categories,
+					"websites":   websites,
+					"socials":    socials,
+					"emails":     emails,
+					"phones":     phones,
+					"brand":      brand,
+					"addresses":  addresses,
+				}
+
+			} else {
+
+				var id string
+				var name string
+				// str_geom defined above
+
+				err := rows.Scan(&id, &name, &str_geom)
+
+				if err != nil {
+					logger.Error("Failed to scan row", "error", err)
+					yield(nil, err)
+					return
+				}
+
+				props = map[string]any{
+					"id":   id,
+					"name": name,
+				}
+
 			}
 
-			str_f := fmt.Sprintf(`{ "type": "Feature", "properties": {}, "geometry": %s }`, geom)
+			str_f := fmt.Sprintf(`{ "type": "Feature", "properties": {}, "geometry": %s }`, str_geom)
 
 			f, err := geojson.UnmarshalFeature([]byte(str_f))
 
@@ -144,11 +321,6 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 				logger.Error("Failed to unmarshal geometry in to feature", "error", err)
 				yield(nil, err)
 				return
-			}
-
-			props := map[string]any{
-				"id":   id,
-				"name": name,
 			}
 
 			r, err := NewOvertureRecord(props, f.Geometry)
@@ -159,7 +331,7 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 			}
 
 			if !yield(r, nil) {
-				logger.Error("Failed to yield record", "id", id, "error", err)
+				logger.Error("Failed to yield record", "id", props["id"], "error", err)
 				return
 			}
 		}
