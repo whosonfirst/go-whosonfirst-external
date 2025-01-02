@@ -97,7 +97,7 @@ Implement the `go-whosonfirst-external` interfaces for [Overture Data's Places d
 overture://parquet/places
 ```
 
-As of this writing the Overture iterator only emits the id, name and geometry Overture Data properties. For example:
+By default, the Overture iterator only emits the id, name and geometry Overture Data properties. For example:
 
 ```
 $> go run cmd/iterate/main.go -iterator-uri overture://parquet/places ~/data/overture/parquet/*.parquet 
@@ -114,6 +114,18 @@ $> go run cmd/iterate/main.go -iterator-uri overture://parquet/places ~/data/ove
 ... and so on
 ```
 
+To export all the properties associated with a Overture "place" record pass the `?properties=all` query parameter to the iterator URI. For example:
+
+```
+$> go run cmd/iterate/main.go -iterator-uri 'overture://parquet/places?properties=all' ~/data/overture/parquet/*.parquet 
+{"properties":{"addresses":[{"country":"CL","freeform":"Avenida Chacabuco 417","locality":"Concepción","postcode":"4030000","region":null}],"brand":{"names":null,"wikidata":null},"categories":{"alternate":["spas"],"primary":"beauty_salon"},"confidence":0.4907482,"emails":[],"id":"08fb2d869b99d68b03680d213838a15f","name":"Centro estético integral NovaBelle","names":{"common":null,"primary":"Centro estético integral NovaBelle","rules":null},"phones":["+56413241617"],"socials":["https://www.facebook.com/1015636625139417"],"sources":[{"confidence":null,"dataset":"meta","property":"","record_id":"1015636625139417","update_time":"2024-09-10T00:00:00.000Z"}],"version":0,"websites":["http://www.novabelle.cl/"]},"geometry":[-73.051,-36.83169]}
+{"properties":{"addresses":[{"country":"CL","freeform":"Avenida Chacabuco 417","locality":"Concepción","postcode":"4030000","region":null}],"brand":{"names":null,"wikidata":null},"categories":{"alternate":null,"primary":null},"confidence":0.26517966,"emails":[],"id":"08fb2d869b999915038f2ded11d425c8","name":"kine__integral","names":{"common":null,"primary":"kine__integral","rules":null},"phones":["+56982334047"],"socials":["https://www.facebook.com/103186637717488"],"sources":[{"confidence":null,"dataset":"meta","property":"","record_id":"103186637717488","update_time":"2024-09-10T00:00:00.000Z"}],"version":0,"websites":[]},"geometry":[-73.0508543,-36.8316943]}
+{"properties":{"addresses":[{"country":"CL","freeform":"Tijuana Parque Ecuador, Calle Lincoyán 14","locality":"Concepción","postcode":"4030000","region":null}],"brand":{"names":null,"wikidata":null},"categories":{"alternate":["community_services_non_profits"],"primary":"fire_department"},"confidence":0.55927837,"emails":[],"id":"08fb2d869b88c2de0383e64d4313fa71","name":"Séptima Compañía de Bomberos Concepción","names":{"common":null,"primary":"Séptima Compañía de Bomberos Concepción","rules":null},"phones":["+56412253021"],"socials":["https://www.facebook.com/148149962466897"],"sources":[{"confidence":null,"dataset":"meta","property":"","record_id":"148149962466897","update_time":"2024-09-10T00:00:00.000Z"}],"version":0,"websites":["http://www.septima.com/"]},"geometry":[-73.0495173,-36.834187]}
+{"properties":{"addresses":[{"country":"CL","freeform":null,"locality":"Concepción","postcode":null,"region":null}],"brand":{"names":null,"wikidata":null},"categories":{"alternate":["community_services_non_profits"],"primary":"public_and_government_association"},"confidence":0.26517966,"emails":[],"id":"08fb2d869b8808e00309ca31ac43fd43","name":"Abuelitas Chile","names":{"common":null,"primary":"Abuelitas Chile","rules":null},"phones":["+56946643895"],"socials":["https://www.facebook.com/2350453898575474"],"sources":[{"confidence":null,"dataset":"meta","property":"","record_id":"2350453898575474","update_time":"2024-09-10T00:00:00.000Z"}],"version":0,"websites":["http://www.abuelitaschile.cl/"]},"geometry":[-73.05053,-36.83348]}
+{"properties":{"addresses":[{"country":"CL","freeform":"Calle Víctor Lamas 361","locality":"Concepción","postcode":"4030000","region":null}],"brand":{"names":null,"wikidata":null},"categories":{"alternate":["southern_restaurant","comfort_food_restaurant"],"primary":"sandwich_shop"},"confidence":0.60211265,"emails":[],"id":"08fb2d869b8808e00377f87f524f9f2d","name":"Fuente Penquista","names":{"common":null,"primary":"Fuente Penquista","rules":null},"phones":["+56954309433"],"socials":["https://www.facebook.com/983736055044613"],"sources":[{"confidence":null,"dataset":"meta","property":"","record_id":"983736055044613","update_time":"2024-09-10T00:00:00.000Z"}],"version":0,"websites":[]},"geometry":[-73.05053,-36.83348]}
+{"properties":{"addresses":[{"country":"CL","freeform":"Calle Víctor Lamas 371","locality":"Concepción","postcode":"4030000","region":"BI"}],"brand":{"names":null,"wikidata":null},"categories":{"alternate":null,"primary":"shopping"},"confidence":0.55927837,"emails":[],"id":"08fb2d869b880b3403b2f4fc95473f2e","name":"El Mesón","names":{"common":null,"primary":"El Mesón","rules":null},"phones":["+56992195014"],"socials":["https://www.facebook.com/904144773050750"],"sources":[{"confidence":null,"dataset":"meta","property":"","record_id":"904144773050750","update_time":"2024-09-10T00:00:00.000Z"}],"version":0,"websites":[]},"geometry":[-73.05043,-36.83347]}
+...and so on
+```
 
 ## DuckDB
 
@@ -166,7 +178,26 @@ $> go run cmd/iterate/main.go -iterator-uri overture://parquet/places ~/data/ove
 
 ### assign-ancestors
 
-_TBW_
+Iterate through one or more URIs for an external data source and reverse-geocode each record emitting the record ID, Who's On First parent ID and Who's On First ancestry as CSV data to STDOUT.
+
+```
+$> ./bin/assign-ancestors -h
+Iterate through one or more URIs for an external data source and reverse-geocode each record emitting the record ID, Who's On First parent ID and Who's On First ancestry as CSV data to STDOUT.
+Usage:
+	 ./bin/assign-ancestors uri(N) uri(N)
+  -iterator-uri string
+    	A registered whosonfirst/go-whosonfirst-external/iterator.Iterator URI.
+  -properties-reader-uri string
+    	A registered whosonfirst/go-reader.Reader URI for reading properties from parent records. If '{spatial-database-uri}' the spatial database instance will be used to read those properties. (default "{spatial-database-uri}")
+  -spatial-database-uri string
+    	A registered whosonfirst/go-whosonfirst-spatial/database/SpatialDatabase URI to use for perforning reverse geocoding tasks.
+  -start-after int
+    	If > 0 then delay processing for 'start_after' number of records.
+  -verbose
+    	Enable verbose (debug) logging.
+  -workers int
+    	The maximum number of workers to process reverse geocoding tasks. (default 5)
+```	
 
 For example:
 
@@ -190,6 +221,17 @@ go run cmd/assign-ancestors/main.go \
    -properties-reader-uri "sql://sqlite3/geojson/id/body?dsn=${DATA}/whosonfirst/whosonfirst-data-admin-latest.db&parse-uri=true" \
    $@
 ```
+
+Where:
+
+* `whosonfirst-point-in-polygon-z13-20241213` is a PMTiles database containing Who's On First data used for performing point-in-polygon operations. See the [" A global point-in-polygon service using a static 8GB data file"](https://millsfield.sfomuseum.org/blog/2022/12/19/pmtiles-pip/) blog post for details.
+* `whosonfirst-data-admin-latest.db` is a Who's On First SQLite distribution, published by [Geocode.earth](https://geocode.earth/data/whosonfirst/combined/).
+
+Notes:
+
+* More "workers" is not necessarily better. I _think_ this has something to do with the underlying library used to query the PMTiles database throttling requests (but I am not sure).
+* When building the PMTiles database (containing Who's On First data used for performing point-in-polygon operations) make sure to use a current (fall/winter 2024) version of `tippecanoe`.)
+* Should this really write CSV files with per-placetype columns instead of a single JSON-encoded `wof:hierarchy` blob? I don't know either but that's what it does, today.
 
 ## See also
 

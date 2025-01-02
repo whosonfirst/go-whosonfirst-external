@@ -110,30 +110,18 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 
 		if it.properties == all_properties {
 
-			/*
-
-						Wut... ??
-
-			> go run cmd/iterate/main.go -iterator-uri 'overture://parquet/places?properties=all' ~/data/overture/parquet/*.parquet
-			2024/12/31 09:32:04 ERROR Failed to scan row uri=/Users/asc/data/overture/parquet/part-00000-9b3cb01a-46a1-4378-9e77-baca19283b5a-c000.zstd.parquet error="sql: Scan error on column index 5, name \"\\\"json\\\"(\\\"names\\\")\": destination not a pointer"
-			2024/12/31 09:32:04 INFO Time to iterate records count=0 time=2.324170458s
-			2024/12/31 09:32:04 Failed to iterate records, sql: Scan error on column index 5, name "\"json\"(\"names\")": destination not a pointer
-			exit status 1
-
-			*/
-
 			other_props := []string{
 				"version",
-				"JSON(sources)",
-				"JSON(names)",
-				"JSON(categories)",
+				"JSON(ifnull(sources, '[]'))",
+				"JSON(ifnull(names, '{}'))",
+				"JSON(ifnull(categories, '{}'))",
 				"confidence",
-				"JSON(websites)",
-				"JSON(socials)",
-				"JSON(emails)",
-				"JSON(phones)",
-				"JSON(brand)",
-				"JSON(addresses)",
+				"JSON(ifnull(websites, '[]'))",
+				"JSON(ifnull(socials, '[]'))",
+				"JSON(ifnull(emails, '[]'))",
+				"JSON(ifnull(phones, '[]'))",
+				"JSON(ifnull(brand, '{}'))",
+				"JSON(ifnull(addresses, '[]'))",
 			}
 
 			props = append(props, other_props...)
@@ -176,7 +164,7 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 
 				err := rows.Scan(
 					&id, &name, &str_geom, &version,
-					&str_sources, str_names, &str_categories,
+					&str_sources, &str_names, &str_categories,
 					&confidence,
 					&str_websites, &str_socials, &str_emails, &str_phones,
 					&str_brand, &str_addresses,
@@ -192,7 +180,7 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 
 				// To do: Add types mapped to the Overture schema
 
-				var sources map[string]any
+				var sources []map[string]any
 				var names map[string]any
 				var categories map[string]any
 
@@ -202,7 +190,7 @@ func (it *OvertureIterator) iterate(ctx context.Context, uri string) iter.Seq2[e
 				var phones []string
 
 				var brand map[string]any
-				var addresses map[string]any
+				var addresses []map[string]any
 
 				err = json.Unmarshal([]byte(str_sources), &sources)
 

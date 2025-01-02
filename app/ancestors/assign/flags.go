@@ -2,6 +2,8 @@ package assign
 
 import (
 	"flag"
+	"fmt"
+	"os"
 
 	"github.com/sfomuseum/go-flags/flagset"
 )
@@ -29,6 +31,12 @@ func DefaultFlagSet() *flag.FlagSet {
 	fs.Int64Var(&start_after, "start-after", 0, "If > 0 then delay processing for 'start_after' number of records.")
 
 	fs.BoolVar(&verbose, "verbose", false, "Enable verbose (debug) logging.")
+
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Iterate through one or more URIs for an external data source and reverse-geocode each record emitting the record ID, Who's On First parent ID and Who's On First ancestry as CSV data to STDOUT.\n")
+		fmt.Fprintf(os.Stderr, "Usage:\n\t %s uri(N) uri(N)\n", os.Args[0])
+		fs.PrintDefaults()
+	}
 
 	return fs
 }
