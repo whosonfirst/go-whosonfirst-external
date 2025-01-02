@@ -226,6 +226,7 @@ Where:
 
 * `whosonfirst-point-in-polygon-z13-20241213` is a PMTiles database containing Who's On First data used for performing point-in-polygon operations. See the [" A global point-in-polygon service using a static 8GB data file"](https://millsfield.sfomuseum.org/blog/2022/12/19/pmtiles-pip/) blog post for details.
 * `whosonfirst-data-admin-latest.db` is a Who's On First SQLite distribution, published by [Geocode.earth](https://geocode.earth/data/whosonfirst/combined/).
+* The use of a SQLite database for a "properties reader" is not _necessary_. If absent then the PMTiles database will be used.
 
 Notes:
 
