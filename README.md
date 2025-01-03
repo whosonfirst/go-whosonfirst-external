@@ -199,27 +199,43 @@ Usage:
     	The maximum number of workers to process reverse geocoding tasks. (default 5)
 ```	
 
-For example:
+For example, imagine a shell script called `assign-ancestors.sh`:
 
 ```
 #!/bin/sh
 
-TILES=whosonfirst-point-in-polygon-z13-20241213
 DATA=${HOME}/data
 
 ITERATOR=foursquare://parquet
 WORKERS=3
 
-CACHE_SIZE=10000
+PMTILES_DATABASE=whosonfirst-point-in-polygon-z13-20241213
+PMTILES_CACHE_SIZE=10000
 
-SPATIAL_DB="pmtiles://?tiles=file://${DATA}/whosonfirst/&database=${TILES}&enable-cache=false&pmtiles-cache-size=${CACHE_SIZE}&zoom=13&layer=whosonfirst"
-		       
+SPATIAL_DB="pmtiles://?tiles=file://${DATA}/whosonfirst/&database=${PMTILES_DATABASE}&enable-cache=false&pmtiles-cache-size=${PMTILES_CACHE_SIZE}&zoom=13&layer=whosonfirst"
+
+PROPERTIES_READER="sql://sqlite3/geojson/id/body?dsn=${DATA}/whosonfirst/whosonfirst-data-admin-latest.db&parse-uri=true"
+# PROPERTIES_READER="{spatial-database-uri}"
+
 go run cmd/assign-ancestors/main.go \
    -workers ${WORKERS} \
    -iterator-uri ${ITERATOR} \
    -spatial-database-uri "${SPATIAL_DB}" \
-   -properties-reader-uri "sql://sqlite3/geojson/id/body?dsn=${DATA}/whosonfirst/whosonfirst-data-admin-latest.db&parse-uri=true" \
+   -properties-reader-uri "${PROPERTIES_READER}" \
    $@
+```
+
+Which would be invoked like this:
+
+```
+$> assign-ancestors.sh ~/data/foursquare/parquet/*.parquet
+external:geometry,external:id,external:namespace,wof:country,wof:hierarchies,wof:parent_id
+POINT(-122.35356862771455 37.95792449892255),4c913ad8b641236a03b97f79,4sq,US,"[{""continent_id"":102191575,""country_id"":85633793,""county_id"":102086225,""locality_id"":85922125,""region_id"":85688637}]",85922125
+POINT(0 0),e36f619d4357549cb86ba73c,4sq,,,-1
+POINT(-122.79330140132753 38.56842541968038),9cad9bae8344473ed53e4b10,4sq,US,"[{""continent_id"":102191575,""country_id"":85633793,""county_id"":102081671,""region_id"":85688637}]",102081671
+POINT(0 0),304d3a4bb7464b9154a9efdb,4sq,,,-1
+POINT(-122.71260890434607 38.438739037633034),4b95c216f964a52034b234e3,4sq,US,"[{""continent_id"":102191575,""country_id"":85633793,""county_id"":102081671,""locality_id"":85922693,""region_id"":85688637}]",85922693
+... and so on
 ```
 
 Where:
