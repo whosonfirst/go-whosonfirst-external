@@ -608,7 +608,7 @@ github.com/schollz/progressbar/v3
 # github.com/sfomuseum/go-csvdict/v2 v2.0.1
 ## explicit; go 1.23
 github.com/sfomuseum/go-csvdict/v2
-# github.com/sfomuseum/go-database v0.0.11
+# github.com/sfomuseum/go-database v0.0.12
 ## explicit; go 1.23.3
 github.com/sfomuseum/go-database/sql
 # github.com/sfomuseum/go-edtf v1.2.1

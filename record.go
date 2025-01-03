@@ -9,6 +9,7 @@ import (
 type Record interface {
 	Id() string
 	Name() string
+	// A valid Who's On First placetype (used for reverse geocoding)
 	Placetype() string
 	Namespace() string
 	Geometry() orb.Geometry

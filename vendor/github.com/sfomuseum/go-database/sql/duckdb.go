@@ -7,7 +7,7 @@ import (
 )
 
 // LoadDuckDBExtensions will issue 'INSTALL' and 'LOAD' statements for 'extensions' using 'db'.
-func LoadDuckDBExtentions(ctx context.Context, db *db_sql.DB, extensions ...string) error {
+func LoadDuckDBExtensions(ctx context.Context, db *db_sql.DB, extensions ...string) error {
 
 	for _, ext := range extensions {
 		

@@ -248,7 +248,6 @@ Notes:
 
 * More "workers" is not necessarily better. I _think_ this has something to do with the underlying library used to query the PMTiles database throttling requests (but I am not sure).
 * When building the PMTiles database (containing Who's On First data used for performing point-in-polygon operations) make sure to use a current (fall/winter 2024) version of `tippecanoe`.)
-* Should this really write CSV files with per-placetype columns instead of a single JSON-encoded `wof:hierarchy` blob? I don't know either but that's what it does, today.
 
 ## See also
 

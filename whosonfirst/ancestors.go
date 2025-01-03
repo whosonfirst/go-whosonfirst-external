@@ -14,6 +14,7 @@ import (
 	"github.com/whosonfirst/go-whosonfirst-spatial/filter"
 	"github.com/whosonfirst/go-whosonfirst-spatial/hierarchy"
 	hierarchy_filter "github.com/whosonfirst/go-whosonfirst-spatial/hierarchy/filter"
+	"slices"
 	"strconv"
 )
 
@@ -21,55 +22,6 @@ type Ancestors struct {
 	ParentId    int64
 	Country     string
 	Hierarchies []map[string]int64
-}
-
-func (a *Ancestors) MarshalHierarchies() string {
-	return ""
-
-	/*
-
-
-			candidates := []string{
-				"microhood_id",
-				"neighbourhood_id",
-				"macrohood_id",
-				"borough_id",
-				"locality_id",
-				"localadmin_id",
-				"county_id",
-				"region_id",
-				"country_id",
-				"continent_id",
-				"empire_id",
-			}
-
-			str_hier := make([]string, len(hierarchies))
-
-			for i, h := range hierarchies {
-
-				// colon-separated list
-				hier_csv := make([]string, len(candidates))
-
-				for j, k := range candidates {
-
-					id, exists := h[k]
-					v := ""
-
-					if exists {
-						v = strconv.FormatInt(id, 10)
-					}
-
-					hier_csv[j] = v
-				}
-
-				str_hier[i] = strings.Join(hier_csv, ":")
-			}
-
-			str_hierarchies = strings.Join(str_hier, ",")
-		}
-
-	*/
-
 }
 
 type DeriveAncestorsOptions struct {
@@ -134,12 +86,11 @@ func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r extern
 		v, exists := opts.ParentCache.Get(k)
 
 		if exists {
-			// hierarchies = v
 			ancestors = v
 		} else {
 
 			hierarchies := make([]map[string]int64, 0)
-			country := "XY"
+			country := ""
 
 			if p_id >= 0 {
 
@@ -154,22 +105,49 @@ func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r extern
 				country = properties.Country(parent_body)
 			}
 
+			if country == "" {
+
+				country_ids := make([]int64, 0)
+
+				for _, h := range hierarchies {
+
+					id, ok := h["country_id"]
+
+					if ok && id > -1 && !slices.Contains(country_ids, id) {
+						country_ids = append(country_ids, id)
+					}
+				}
+
+				switch len(country_ids) {
+				case 0:
+					country = "XY"
+				case 1:
+
+					country_id := country_ids[0]
+					country_body, err := wof_reader.LoadBytes(ctx, opts.PropertiesReader, country_id)
+
+					if err != nil {
+						logger.Warn("Failed to load record for country", "id", country_id, "error", err)
+					} else {
+						country = properties.Country(country_body)
+					}
+
+					if country == "" {
+						country = "XY"
+					}
+
+				default:
+					country = "XZ"
+				}
+			}
+
 			ancestors.Hierarchies = hierarchies
 			ancestors.Country = country
 
 			opts.ParentCache.Set(k, ancestors, 1)
-			// opts.ParentCache.Set(k, hierarchies, 1)
 		}
 	}
 
 	ancestors.ParentId = parent_id
-
-	/*
-		a := &Ancestors{
-			ParentId:    parent_id,
-			Hierarchies: hierarchies,
-		}
-	*/
-
 	return ancestors, nil
 }
