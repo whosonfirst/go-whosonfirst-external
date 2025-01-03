@@ -131,8 +131,8 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	mu := new(sync.RWMutex)
-	wg := new(sync.WaitGroup)
+	csv_mu := new(sync.RWMutex)
+	csv_wg := new(sync.WaitGroup)
 
 	throttle := make(chan bool, workers)
 
@@ -190,10 +190,6 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 				last_processed = p
 
 				slog.Info("Status", "counter", counter, "processed", p, "diff", diff, "avg t2p", float64(timing)/float64(p), "elaspsed", time.Since(start))
-
-				if csv_wr != nil {
-					csv_wr.Flush()
-				}
 			}
 		}
 	}()
@@ -243,8 +239,8 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			"wof:hierarchies":    str_hierarchies,
 		}
 
-		mu.Lock()
-		defer mu.Unlock()
+		csv_mu.Lock()
+		defer csv_mu.Unlock()
 
 		if csv_wr == nil {
 
@@ -258,7 +254,9 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			csv_wr = wr
 		}
 
-		return csv_wr.WriteRow(out)
+		csv_wr.WriteRow(out)
+		csv_wr.Flush()
+		return nil
 	}
 
 	for r, err := range iter.Iterate(ctx, opts.IteratorSources...) {
@@ -277,13 +275,13 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 		<-throttle
 
-		wg.Add(1)
+		csv_wg.Add(1)
 
 		go func(r external.Record) {
 
 			defer func() {
 				throttle <- true
-				wg.Done()
+				csv_wg.Done()
 			}()
 
 			err = process_record(ctx, r)
@@ -295,11 +293,6 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		}(r)
 	}
 
-	wg.Wait()
-
-	if csv_wr != nil {
-		go csv_wr.Flush()
-	}
-
+	csv_wg.Wait()
 	return nil
 }
