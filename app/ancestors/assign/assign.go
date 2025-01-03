@@ -34,8 +34,10 @@ import (
 
 	"github.com/dgraph-io/ristretto/v2"
 	jsoniter "github.com/json-iterator/go"
+	gh "github.com/mmcloughlin/geohash"
 	"github.com/paulmach/orb/encoding/wkt"
 	"github.com/paulmach/orb/geojson"
+	"github.com/paulmach/orb/planar"
 	"github.com/sfomuseum/go-csvdict/v2"
 	"github.com/whosonfirst/go-reader"
 	"github.com/whosonfirst/go-whosonfirst-external"
@@ -212,9 +214,15 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		}
 
 		geom := ""
+		geohash := ""
 
 		if r.Geometry() != nil {
-			geom = wkt.MarshalString(r.Geometry())
+
+			orb_geom := r.Geometry()
+			orb_pt, _ := planar.CentroidArea(orb_geom)
+
+			geohash = gh.EncodeWithPrecision(orb_pt.X(), orb_pt.Y(), 8)
+			geom = wkt.MarshalString(orb_geom)
 		}
 
 		str_hierarchies := ""
@@ -234,6 +242,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			"external:id":        r.Id(),
 			"external:namespace": r.Namespace(),
 			"external:geometry":  geom,
+			"geohash":            geohash,
 			"wof:parent_id":      strconv.FormatInt(a.ParentId, 10),
 			"wof:country":        a.Country,
 			"wof:hierarchies":    str_hierarchies,
