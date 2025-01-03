@@ -190,6 +190,10 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 				last_processed = p
 
 				slog.Info("Status", "counter", counter, "processed", p, "diff", diff, "avg t2p", float64(timing)/float64(p), "elaspsed", time.Since(start))
+
+				if csv_wr != nil {
+					csv_wr.Flush()
+				}
 			}
 		}
 	}()
