@@ -176,10 +176,6 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			select {
 			case <-ticker.C:
 
-				if csv_wr != nil {
-					go csv_wr.Flush()
-				}
-
 				p := atomic.LoadInt64(&processed)
 				diff := int64(0)
 
@@ -190,6 +186,10 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 				last_processed = p
 
 				slog.Info("Status", "counter", counter, "processed", p, "diff", diff, "avg t2p", float64(timing)/float64(p), "elaspsed", time.Since(start))
+
+				if csv_wr != nil {
+					csv_wr.Flush()
+				}
 			}
 		}
 	}()
