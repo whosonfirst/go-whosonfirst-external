@@ -14,67 +14,20 @@ import (
 	"github.com/whosonfirst/go-whosonfirst-spatial/filter"
 	"github.com/whosonfirst/go-whosonfirst-spatial/hierarchy"
 	hierarchy_filter "github.com/whosonfirst/go-whosonfirst-spatial/hierarchy/filter"
+	"slices"
 	"strconv"
 )
 
 type Ancestors struct {
 	ParentId    int64
+	Country     string
 	Hierarchies []map[string]int64
-}
-
-func (a *Ancestors) MarshalHierarchies() string {
-	return ""
-
-	/*
-
-
-			candidates := []string{
-				"microhood_id",
-				"neighbourhood_id",
-				"macrohood_id",
-				"borough_id",
-				"locality_id",
-				"localadmin_id",
-				"county_id",
-				"region_id",
-				"country_id",
-				"continent_id",
-				"empire_id",
-			}
-
-			str_hier := make([]string, len(hierarchies))
-
-			for i, h := range hierarchies {
-
-				// colon-separated list
-				hier_csv := make([]string, len(candidates))
-
-				for j, k := range candidates {
-
-					id, exists := h[k]
-					v := ""
-
-					if exists {
-						v = strconv.FormatInt(id, 10)
-					}
-
-					hier_csv[j] = v
-				}
-
-				str_hier[i] = strings.Join(hier_csv, ":")
-			}
-
-			str_hierarchies = strings.Join(str_hier, ",")
-		}
-
-	*/
-
 }
 
 type DeriveAncestorsOptions struct {
 	SpatialDatabase  database.SpatialDatabase
 	Resolver         *hierarchy.PointInPolygonHierarchyResolver
-	ParentCache      *ristretto.Cache[string, []map[string]int64]
+	ParentCache      *ristretto.Cache[string, *Ancestors]
 	ResultsCallback  hierarchy_filter.FilterSPRResultsFunc
 	PropertiesReader reader.Reader
 }
@@ -85,7 +38,7 @@ func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r extern
 	logger = logger.With("id", r.Id())
 
 	parent_id := int64(-1)
-	hierarchies := make([]map[string]int64, 0)
+	ancestors := &Ancestors{}
 
 	f := geojson.NewFeature(r.Geometry())
 
@@ -133,27 +86,68 @@ func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r extern
 		v, exists := opts.ParentCache.Get(k)
 
 		if exists {
-			hierarchies = v
+			ancestors = v
 		} else {
 
-			// belongs_to = parent_spr.BelongsTo()
+			hierarchies := make([]map[string]int64, 0)
+			country := ""
 
-			parent_body, err := wof_reader.LoadBytes(ctx, opts.PropertiesReader, p_id)
+			if p_id >= 0 {
 
-			if err != nil {
-				logger.Warn("Failed to derive record from properties reader", "id", p_id, "error", err)
-			} else {
-				hierarchies = properties.Hierarchies(parent_body)
+				parent_body, err := wof_reader.LoadBytes(ctx, opts.PropertiesReader, p_id)
+
+				if err != nil {
+					logger.Warn("Failed to derive record from properties reader", "id", p_id, "error", err)
+				} else {
+					hierarchies = properties.Hierarchies(parent_body)
+				}
+
+				country = properties.Country(parent_body)
 			}
 
-			opts.ParentCache.Set(k, hierarchies, 1)
+			if country == "" {
+
+				country_ids := make([]int64, 0)
+
+				for _, h := range hierarchies {
+
+					id, ok := h["country_id"]
+
+					if ok && id > -1 && !slices.Contains(country_ids, id) {
+						country_ids = append(country_ids, id)
+					}
+				}
+
+				switch len(country_ids) {
+				case 0:
+					country = "XY"
+				case 1:
+
+					country_id := country_ids[0]
+					country_body, err := wof_reader.LoadBytes(ctx, opts.PropertiesReader, country_id)
+
+					if err != nil {
+						logger.Warn("Failed to load record for country", "id", country_id, "error", err)
+					} else {
+						country = properties.Country(country_body)
+					}
+
+					if country == "" {
+						country = "XY"
+					}
+
+				default:
+					country = "XZ"
+				}
+			}
+
+			ancestors.Hierarchies = hierarchies
+			ancestors.Country = country
+
+			opts.ParentCache.Set(k, ancestors, 1)
 		}
 	}
 
-	a := &Ancestors{
-		ParentId:    parent_id,
-		Hierarchies: hierarchies,
-	}
-
-	return a, nil
+	ancestors.ParentId = parent_id
+	return ancestors, nil
 }

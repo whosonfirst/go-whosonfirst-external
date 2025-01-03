@@ -22,6 +22,7 @@ package assign
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -139,7 +140,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		throttle <- true
 	}
 
-	parent_cache, err := ristretto.NewCache(&ristretto.Config[string, []map[string]int64]{
+	parent_cache, err := ristretto.NewCache(&ristretto.Config[string, *whosonfirst.Ancestors]{
 		NumCounters: 1e7,     // number of keys to track frequency of (10M).
 		MaxCost:     1 << 30, // maximum cost of cache (1GB).
 		BufferItems: 64,      // number of keys per Get buffer.
@@ -175,6 +176,10 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			select {
 			case <-ticker.C:
 
+				if csv_wr != nil {
+					go csv_wr.Flush()
+				}
+
 				p := atomic.LoadInt64(&processed)
 				diff := int64(0)
 
@@ -188,20 +193,6 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			}
 		}
 	}()
-
-	candidates := []string{
-		"microhood_id",
-		"neighbourhood_id",
-		"macrohood_id",
-		"borough_id",
-		"locality_id",
-		"localadmin_id",
-		"county_id",
-		"region_id",
-		"country_id",
-		"continent_id",
-		"empire_id",
-	}
 
 	process_record := func(ctx context.Context, r external.Record) error {
 
@@ -226,59 +217,26 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			geom = wkt.MarshalString(r.Geometry())
 		}
 
-		count_hiers := len(a.Hierarchies)
-		csv_rows := make([]map[string]string, count_hiers)
+		str_hierarchies := ""
 
-		switch count_hiers {
-		case 0:
+		if a.ParentId >= 0 {
 
-			out := map[string]string{
-				"external:id":           r.Id(),
-				"external:geometry":     geom,
-				"wof:hierarchies_count": "0",
-				"wof:hierarchies_idx":   "0",
-				"wof:parent_id":         strconv.FormatInt(a.ParentId, 10),
+			enc_hierarchies, err := json.Marshal(a.Hierarchies)
+
+			if err != nil {
+				return fmt.Errorf("Failed to marshal hierarchies, %w", err)
 			}
 
-			for _, label := range candidates {
-				wof_label := fmt.Sprintf("wof:%s", label)
-				wof_value := ""
-				out[wof_label] = wof_value
-			}
+			str_hierarchies = string(enc_hierarchies)
+		}
 
-			csv_rows = []map[string]string{
-				out,
-			}
-
-		default:
-
-			for i, h := range a.Hierarchies {
-
-				out := map[string]string{
-					"external:id":           r.Id(),
-					"external:geometry":     geom,
-					"wof:hierarchies_count": strconv.Itoa(count_hiers),
-					"wof:hierarchies_idx":   strconv.Itoa(i),
-					"wof:parent_id":         strconv.FormatInt(a.ParentId, 10),
-				}
-
-				for _, label := range candidates {
-
-					wof_label := fmt.Sprintf("wof:%s", label)
-					wof_value := ""
-
-					v, exists := h[label]
-
-					if exists {
-						wof_value = strconv.FormatInt(v, 10)
-					}
-
-					out[wof_label] = wof_value
-				}
-
-				csv_rows[i] = out
-			}
-
+		out := map[string]string{
+			"external:id":        r.Id(),
+			"external:namespace": r.Namespace(),
+			"external:geometry":  geom,
+			"wof:parent_id":      strconv.FormatInt(a.ParentId, 10),
+			"wof:country":        a.Country,
+			"wof:hierarchies":    str_hierarchies,
 		}
 
 		mu.Lock()
@@ -296,12 +254,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			csv_wr = wr
 		}
 
-		for _, out := range csv_rows {
-			csv_wr.WriteRow(out)
-		}
-
-		csv_wr.Flush()
-		return nil
+		return csv_wr.WriteRow(out)
 	}
 
 	for r, err := range iter.Iterate(ctx, opts.IteratorSources...) {
@@ -339,5 +292,10 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 	}
 
 	wg.Wait()
+
+	if csv_wr != nil {
+		go csv_wr.Flush()
+	}
+
 	return nil
 }

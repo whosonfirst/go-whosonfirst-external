@@ -62,7 +62,7 @@ func NewOvertureIterator(ctx context.Context, uri string) (external.Iterator, er
 		return nil, err
 	}
 
-	err = sfom_sql.LoadDuckDBExtentions(ctx, db, "SPATIAL")
+	err = sfom_sql.LoadDuckDBExtensions(ctx, db, "SPATIAL")
 
 	if err != nil {
 		return nil, err

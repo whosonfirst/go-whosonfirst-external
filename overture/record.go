@@ -28,7 +28,7 @@ func NewOvertureRecord(props map[string]any, geom orb.Geometry) (external.Record
 		Properties: props,
 		Geometry:   geom,
 		Namespace:  NAMESPACE,
-		Placetype:  "place",
+		Placetype:  "venue",
 		IdKey:      "id",
 		NameKey:    "name",
 	}

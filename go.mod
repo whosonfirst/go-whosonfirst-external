@@ -10,7 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/paulmach/orb v0.11.1
 	github.com/sfomuseum/go-csvdict/v2 v2.0.1
-	github.com/sfomuseum/go-database v0.0.11
+	github.com/sfomuseum/go-database v0.0.12
 	github.com/sfomuseum/go-flags v0.10.0
 	github.com/whosonfirst/go-reader v1.0.2
 	github.com/whosonfirst/go-reader-database-sql v0.2.0
