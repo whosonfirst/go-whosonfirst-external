@@ -19,6 +19,7 @@ import (
 
 type Ancestors struct {
 	ParentId    int64
+	Country     string
 	Hierarchies []map[string]int64
 }
 
@@ -74,7 +75,7 @@ func (a *Ancestors) MarshalHierarchies() string {
 type DeriveAncestorsOptions struct {
 	SpatialDatabase  database.SpatialDatabase
 	Resolver         *hierarchy.PointInPolygonHierarchyResolver
-	ParentCache      *ristretto.Cache[string, []map[string]int64]
+	ParentCache      *ristretto.Cache[string, *Ancestors]
 	ResultsCallback  hierarchy_filter.FilterSPRResultsFunc
 	PropertiesReader reader.Reader
 }
@@ -85,7 +86,7 @@ func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r extern
 	logger = logger.With("id", r.Id())
 
 	parent_id := int64(-1)
-	hierarchies := make([]map[string]int64, 0)
+	ancestors := &Ancestors{}
 
 	f := geojson.NewFeature(r.Geometry())
 
@@ -133,27 +134,42 @@ func DeriveAncestors(ctx context.Context, opts *DeriveAncestorsOptions, r extern
 		v, exists := opts.ParentCache.Get(k)
 
 		if exists {
-			hierarchies = v
+			// hierarchies = v
+			ancestors = v
 		} else {
 
-			// belongs_to = parent_spr.BelongsTo()
+			hierarchies := make([]map[string]int64, 0)
+			country := "XY"
 
-			parent_body, err := wof_reader.LoadBytes(ctx, opts.PropertiesReader, p_id)
+			if p_id >= 0 {
 
-			if err != nil {
-				logger.Warn("Failed to derive record from properties reader", "id", p_id, "error", err)
-			} else {
-				hierarchies = properties.Hierarchies(parent_body)
+				parent_body, err := wof_reader.LoadBytes(ctx, opts.PropertiesReader, p_id)
+
+				if err != nil {
+					logger.Warn("Failed to derive record from properties reader", "id", p_id, "error", err)
+				} else {
+					hierarchies = properties.Hierarchies(parent_body)
+				}
+
+				country = properties.Country(parent_body)
 			}
 
-			opts.ParentCache.Set(k, hierarchies, 1)
+			ancestors.Hierarchies = hierarchies
+			ancestors.Country = country
+
+			opts.ParentCache.Set(k, ancestors, 1)
+			// opts.ParentCache.Set(k, hierarchies, 1)
 		}
 	}
 
-	a := &Ancestors{
-		ParentId:    parent_id,
-		Hierarchies: hierarchies,
-	}
+	ancestors.ParentId = parent_id
 
-	return a, nil
+	/*
+		a := &Ancestors{
+			ParentId:    parent_id,
+			Hierarchies: hierarchies,
+		}
+	*/
+
+	return ancestors, nil
 }
