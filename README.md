@@ -229,11 +229,25 @@ Which would be invoked like this:
 
 ```
 $> assign-ancestors.sh ~/data/foursquare/parquet/*.parquet
+2025/01/03 09:11:58 INFO Status counter=9038 processed=9034 diff=0 "avg t2p"=2.701129067965464 elaspsed=10.00037225s
+2025/01/03 09:12:08 INFO Status counter=20559 processed=20555 diff=11521 "avg t2p"=2.400924349306738 elaspsed=20.000024708s
+2025/01/03 09:12:18 INFO Status counter=30606 processed=30602 diff=10047 "avg t2p"=2.445199660152931 elaspsed=30.000002792s
+2025/01/03 09:12:19 INFO Time to prune databases total=6702 pruned=5101 time=264.497334ms
+2025/01/03 09:12:28 INFO Status counter=42446 processed=42442 diff=11840 "avg t2p"=2.3315819235662785 elaspsed=40.000010458s
+2025/01/03 09:12:38 INFO Status counter=55812 processed=55808 diff=13366 "avg t2p"=2.1864607224770642 elaspsed=50.000002958s
+2025/01/03 09:12:48 INFO Status counter=69066 processed=69062 diff=13254 "avg t2p"=2.0958558975992587 elaspsed=1m0.000026125s
+2025/01/03 09:12:49 INFO Time to prune databases total=3562 pruned=3364 time=132.416792ms
+... and so on
+```
+
+And the output would look like this:
+
+```
 external:geometry,external:id,external:namespace,wof:country,wof:hierarchies,wof:parent_id
 POINT(-122.35356862771455 37.95792449892255),4c913ad8b641236a03b97f79,4sq,US,"[{""continent_id"":102191575,""country_id"":85633793,""county_id"":102086225,""locality_id"":85922125,""region_id"":85688637}]",85922125
-POINT(0 0),e36f619d4357549cb86ba73c,4sq,,,-1
+POINT(0 0),e36f619d4357549cb86ba73c,4sq,XY,,-1
 POINT(-122.79330140132753 38.56842541968038),9cad9bae8344473ed53e4b10,4sq,US,"[{""continent_id"":102191575,""country_id"":85633793,""county_id"":102081671,""region_id"":85688637}]",102081671
-POINT(0 0),304d3a4bb7464b9154a9efdb,4sq,,,-1
+POINT(0 0),304d3a4bb7464b9154a9efdb,4sq,XY,,-1
 POINT(-122.71260890434607 38.438739037633034),4b95c216f964a52034b234e3,4sq,US,"[{""continent_id"":102191575,""country_id"":85633793,""county_id"":102081671,""locality_id"":85922693,""region_id"":85688637}]",85922693
 ... and so on
 ```
