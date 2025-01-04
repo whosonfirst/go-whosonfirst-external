@@ -178,10 +178,6 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			select {
 			case <-ticker.C:
 
-				if csv_wr != nil {
-					go csv_wr.Flush()
-				}
-
 				p := atomic.LoadInt64(&processed)
 				diff := int64(0)
 
