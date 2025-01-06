@@ -1,13 +1,17 @@
 package sort
 
 import (
+	"compress/bzip2"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/sfomuseum/go-csvdict/v2"
@@ -43,19 +47,29 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		logger := slog.Default()
 		logger = logger.With("source", path_r)
 
-		csv_r, err := csvdict.NewReaderFromPath(path_r)
+		r, err := os.Open(path_r)
+
+		if err != nil {
+			return fmt.Errorf("Failed to open %s for reading, %w", path_r, err)
+		}
+
+		defer r.Close()
+
+		bz_r := bzip2.NewReader(r)
+
+		csv_r, err := csvdict.NewReader(bz_r)
 
 		if err != nil {
 			return fmt.Errorf("Failed to create CSV reader for %s, %w", path_r, err)
 		}
-
-		// mu := new(sync.RWMutex)
 
 		for row, err := range csv_r.Iterate() {
 
 			if err != nil {
 				return fmt.Errorf("CSV reader yielded an error, %w", err)
 			}
+
+			to_write := make([]string, 0)
 
 			// logger.Debug("Data", "row", row)
 
@@ -72,76 +86,121 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			}
 
 			country = strings.ToLower(country)
-			fname := fmt.Sprintf("%s.csv", country)
 
-			if opts.WithGeohash {
-
-				geohash, ok := row["geohash"]
-
-				if !ok {
-					logger.Warn("Row is missing geohash", "row", row)
-					continue
-					// return fmt.Errorf("Row is missing geohash")
-				}
-
-				fname = fmt.Sprintf("%s-%s.csv", country, geohash[0:opts.GeohashPrecision])
-			}
-
-			namespace := "ovtr" // FIX ME...
-
-			root := filepath.Join(opts.Target, fmt.Sprintf("whosonfirst-data-external-%s-%s", namespace, country))
-			root = filepath.Join(root, "data")
-
-			path := filepath.Join(root, fname)
-
-			// mu.Lock()
-			// defer mu.Unlock()
-
-			csv_wr, ok := csv_writers[path]
+			namespace, ok := row["external:namespace"]
 
 			if !ok {
-
-				// slog.Debug("Create new CSV writer", "path", path)
-
-				var new_csv_wr *csvdict.Writer
-				var new_csv_err error
-
-				if opts.Target == "-" {
-					new_csv_wr, new_csv_err = csvdict.NewWriter(io.Discard)
-				} else {
-
-					path_root := filepath.Dir(path)
-					err := os.MkdirAll(path_root, 0755)
-
-					if err != nil {
-						return fmt.Errorf("Failed to create %s, %w", path_root, err)
-					}
-
-					wr, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-
-					if err != nil {
-						return fmt.Errorf("Failed to create writer for %s, %w", path, err)
-					}
-
-					writers = append(writers, wr)
-					new_csv_wr, new_csv_err = csvdict.NewWriter(wr)
-				}
-
-				if new_csv_err != nil {
-					return fmt.Errorf("Failed to create new CSV writer for %s, %w", path, new_csv_err)
-				}
-
-				csv_wr = new_csv_wr
-				csv_writers[path] = csv_wr
+				logger.Warn("Row is missing external:namespace", "row", row)
+				continue
 			}
 
-			err = csv_wr.WriteRow(row)
+			var hierarchies []map[string]int64
+
+			err := json.Unmarshal([]byte(row["wof:hierarchies"]), &hierarchies)
 
 			if err != nil {
-				return fmt.Errorf("Failed to write row to %s, %w", path, err)
+				return fmt.Errorf("Failed to unmarshal hierarchies, %w", err)
 			}
 
-			csv_wr.Flush()
+			hier_paths := make([]string, 0)
+
+			for _, hier := range hierarchies {
+
+				str_region := "xx"
+				str_locality := "xx"
+
+				region_id, region_ok := hier["region_id"]
+				locality_id, locality_ok := hier["locality_id"]
+
+				if region_ok {
+					str_region = strconv.FormatInt(region_id, 10)
+				}
+
+				if locality_ok {
+					str_locality = strconv.FormatInt(locality_id, 10)
+				}
+
+				fname := fmt.Sprintf("%s-%s-%s.csv", country, str_region, str_locality)
+				rel_path := filepath.Join(str_region, fname)
+
+				if !slices.Contains(hier_paths, rel_path) {
+					hier_paths = append(hier_paths, rel_path)
+				}
+			}
+
+			for _, rel_path := range hier_paths {
+
+				root := filepath.Join(opts.Target, fmt.Sprintf("whosonfirst-data-external-%s-%s", namespace, country))
+				root = filepath.Join(root, "data")
+
+				wr_path := filepath.Join(root, rel_path)
+				to_write = append(to_write, wr_path)
+			}
+
+			/*
+				if opts.WithGeohash {
+
+					geohash, ok := row["geohash"]
+
+					if !ok {
+						logger.Warn("Row is missing geohash", "row", row)
+						continue
+						// return fmt.Errorf("Row is missing geohash")
+					}
+
+					fname = fmt.Sprintf("%s-%s.csv", country, geohash[0:opts.GeohashPrecision])
+				}
+			*/
+
+			for _, path := range to_write {
+
+				csv_wr, ok := csv_writers[path]
+
+				if !ok {
+
+					// slog.Debug("Create new CSV writer", "path", path)
+
+					var new_csv_wr *csvdict.Writer
+					var new_csv_err error
+
+					if opts.Target == "-" {
+						new_csv_wr, new_csv_err = csvdict.NewWriter(io.Discard)
+					} else {
+
+						path_root := filepath.Dir(path)
+						err := os.MkdirAll(path_root, 0755)
+
+						if err != nil {
+							return fmt.Errorf("Failed to create %s, %w", path_root, err)
+						}
+
+						wr, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+
+						if err != nil {
+							return fmt.Errorf("Failed to create writer for %s, %w", path, err)
+						}
+
+						writers = append(writers, wr)
+						new_csv_wr, new_csv_err = csvdict.NewWriter(wr)
+					}
+
+					if new_csv_err != nil {
+						return fmt.Errorf("Failed to create new CSV writer for %s, %w", path, new_csv_err)
+					}
+
+					csv_wr = new_csv_wr
+					csv_writers[path] = csv_wr
+				}
+
+				err = csv_wr.WriteRow(row)
+
+				if err != nil {
+					return fmt.Errorf("Failed to write row to %s, %w", path, err)
+				}
+
+				csv_wr.Flush()
+			}
+
 		}
 	}
 
