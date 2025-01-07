@@ -39,6 +39,8 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
+	namespace := opts.Namespace
+
 	csv_writers := make(map[string]*csvdict.Writer)
 	writers := make([]io.WriteCloser, 0)
 
@@ -87,50 +89,60 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 			country = strings.ToLower(country)
 
-			namespace, ok := row["external:namespace"]
+			if namespace == "" {
 
-			if !ok {
-				logger.Warn("Row is missing external:namespace", "row", row)
-				continue
+				ns, ok := row["external:namespace"]
+
+				if !ok {
+					logger.Warn("Row is missing external:namespace", "row", row)
+					continue
+				}
+
+				namespace = ns
 			}
+
+			hier_paths := make([]string, 0)
 
 			var hierarchies []map[string]int64
 
 			err := json.Unmarshal([]byte(row["wof:hierarchies"]), &hierarchies)
 
 			if err != nil {
-				return fmt.Errorf("Failed to unmarshal hierarchies, %w", err)
-			}
 
-			hier_paths := make([]string, 0)
-
-			for _, hier := range hierarchies {
-
-				str_region := "xx"
-				str_locality := "xx"
-
-				region_id, region_ok := hier["region_id"]
-				locality_id, locality_ok := hier["locality_id"]
-
-				if region_ok {
-					str_region = strconv.FormatInt(region_id, 10)
+				hier_paths = []string{
+					fmt.Sprintf("xx/%s-xx-xx.csv", country),
 				}
 
-				if locality_ok {
-					str_locality = strconv.FormatInt(locality_id, 10)
-				}
+			} else {
 
-				fname := fmt.Sprintf("%s-%s-%s.csv", country, str_region, str_locality)
-				rel_path := filepath.Join(str_region, fname)
+				for _, hier := range hierarchies {
 
-				if !slices.Contains(hier_paths, rel_path) {
-					hier_paths = append(hier_paths, rel_path)
+					str_region := "xx"
+					str_locality := "xx"
+
+					region_id, region_ok := hier["region_id"]
+					locality_id, locality_ok := hier["locality_id"]
+
+					if region_ok {
+						str_region = strconv.FormatInt(region_id, 10)
+					}
+
+					if locality_ok {
+						str_locality = strconv.FormatInt(locality_id, 10)
+					}
+
+					fname := fmt.Sprintf("%s-%s-%s.csv", country, str_region, str_locality)
+					rel_path := filepath.Join(str_region, fname)
+
+					if !slices.Contains(hier_paths, rel_path) {
+						hier_paths = append(hier_paths, rel_path)
+					}
 				}
 			}
 
 			for _, rel_path := range hier_paths {
 
-				root := filepath.Join(opts.Target, fmt.Sprintf("whosonfirst-data-external-%s-%s", namespace, country))
+				root := filepath.Join(opts.Target, fmt.Sprintf("whosonfirst-external-%s-venue-%s", namespace, country))
 				root = filepath.Join(root, "data")
 
 				wr_path := filepath.Join(root, rel_path)

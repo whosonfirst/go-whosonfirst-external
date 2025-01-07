@@ -9,6 +9,7 @@ import (
 type RunOptions struct {
 	Sources          []string
 	Target           string
+	Namespace        string
 	WithGeohash      bool
 	GeohashPrecision int
 	Verbose          bool
@@ -23,6 +24,7 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 	opts := &RunOptions{
 		Target:           target,
 		Sources:          sources,
+		Namespace:        namespace,
 		WithGeohash:      with_geohash,
 		GeohashPrecision: geohash_precision,
 		Verbose:          verbose,
