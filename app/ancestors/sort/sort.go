@@ -87,6 +87,12 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 				country = "XY"
 			}
 
+			/*
+			if country != "US" {
+				continue
+			}
+			*/
+			
 			country = strings.ToLower(country)
 
 			if namespace == "" {
@@ -123,11 +129,11 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 					region_id, region_ok := hier["region_id"]
 					locality_id, locality_ok := hier["locality_id"]
 
-					if region_ok {
+					if region_ok && region_id != -1 {
 						str_region = strconv.FormatInt(region_id, 10)
 					}
 
-					if locality_ok {
+					if locality_ok && locality_id != -1 {
 						str_locality = strconv.FormatInt(locality_id, 10)
 					}
 
