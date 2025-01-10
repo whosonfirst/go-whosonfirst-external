@@ -88,11 +88,11 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			}
 
 			/*
-				if country != "US" {
-					continue
-				}
+			if country != "GB" {
+				continue
+			}
 			*/
-
+			
 			country = strings.ToLower(country)
 
 			if namespace == "" {
