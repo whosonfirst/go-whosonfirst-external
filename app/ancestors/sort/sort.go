@@ -88,11 +88,11 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			}
 
 			/*
-			if country != "US" {
-				continue
-			}
+				if country != "US" {
+					continue
+				}
 			*/
-			
+
 			country = strings.ToLower(country)
 
 			if namespace == "" {
@@ -155,21 +155,6 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 				to_write = append(to_write, wr_path)
 			}
 
-			/*
-				if opts.WithGeohash {
-
-					geohash, ok := row["geohash"]
-
-					if !ok {
-						logger.Warn("Row is missing geohash", "row", row)
-						continue
-						// return fmt.Errorf("Row is missing geohash")
-					}
-
-					fname = fmt.Sprintf("%s-%s.csv", country, geohash[0:opts.GeohashPrecision])
-				}
-			*/
-
 			for _, path := range to_write {
 
 				csv_wr, ok := csv_writers[path]
@@ -192,7 +177,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 							return fmt.Errorf("Failed to create %s, %w", path_root, err)
 						}
 
-						wr, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+						wr, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
 
 						if err != nil {
 							return fmt.Errorf("Failed to create writer for %s, %w", path, err)

@@ -7,12 +7,10 @@ import (
 )
 
 type RunOptions struct {
-	Sources          []string
-	Target           string
-	Namespace        string
-	WithGeohash      bool
-	GeohashPrecision int
-	Verbose          bool
+	Sources   []string
+	Target    string
+	Namespace string
+	Verbose   bool
 }
 
 func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
@@ -22,12 +20,10 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 	sources := fs.Args()
 
 	opts := &RunOptions{
-		Target:           target,
-		Sources:          sources,
-		Namespace:        namespace,
-		WithGeohash:      with_geohash,
-		GeohashPrecision: geohash_precision,
-		Verbose:          verbose,
+		Target:    target,
+		Sources:   sources,
+		Namespace: namespace,
+		Verbose:   verbose,
 	}
 
 	return opts, nil

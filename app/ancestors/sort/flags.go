@@ -10,9 +10,6 @@ import (
 
 var target string
 var namespace string
-
-var with_geohash bool
-var geohash_precision int
 var verbose bool
 
 func DefaultFlagSet() *flag.FlagSet {
@@ -21,10 +18,6 @@ func DefaultFlagSet() *flag.FlagSet {
 
 	fs.StringVar(&target, "target", "-", "If target is '-' then all data will be written to /dev/null (or equivalent).")
 	fs.StringVar(&namespace, "namespace", "", "...")
-
-	fs.BoolVar(&with_geohash, "with-geohash", true, "...")
-	fs.IntVar(&geohash_precision, "geohash-precision", 3, "...")
-
 	fs.BoolVar(&verbose, "verbose", false, "Enable verbose (debug) logging.")
 
 	fs.Usage = func() {
