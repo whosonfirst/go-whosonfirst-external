@@ -147,6 +147,8 @@ The is also a handy `modvendor` Makefile target (in this package) to make that l
 $> make cli
 go build -mod vendor -ldflags="-s -w" -o bin/iterate cmd/iterate/main.go
 go build -mod vendor -ldflags="-s -w" -o bin/assign-ancestors cmd/assign-ancestors/main.go
+go build -mod vendor -ldflags="-s -w" -o bin/sort-ancestors cmd/sort-ancestors/main.go
+go build -mod vendor -ldflags="-s -w" -o bin/walk-sorted cmd/walk-sorted/main.go
 ```
 
 ### iterate
@@ -262,6 +264,40 @@ Notes:
 
 * More "workers" is not necessarily better. I _think_ this has something to do with the underlying library used to query the PMTiles database throttling requests (but I am not sure).
 * When building the PMTiles database (containing Who's On First data used for performing point-in-polygon operations) make sure to use a current (fall/winter 2024) version of `tippecanoe`.
+
+### walk-sorted
+
+Walk one or more [whosonfirst-data/whosonfirst-external-* repositories](https://github.com/whosonfirst-data/?q=whosonfirst-external-&type=all&language=&sort=), with optional filtering, emitting CSV-encoded rows to STDOUT.
+
+```
+$> ./bin/walk-sorted -h
+Walk one or more whosonfirst-external-* repositories, with optional filtering, emitting CSV-encoded rows to STDOUT.
+Usage:
+	 ./bin/walk-sorted path(N) path(N) path(N)
+  -ancestor-id value
+    	Zero or more "wof:hierarchies" values to match.
+  -geohash string
+    	An optional geohash to do a prefix-first comparison against.
+  -mode string
+    	Indicate whether all or any filter criteria must match. Valid options are: any, all. (default "all")
+  -parent-id value
+    	One or more "wof:parent_id" values to match.
+  -verbose
+    	Enable verbose (debug) logging.
+```
+
+For example, to emit all the Foursquare venues in [San Francisco](https://spelunker.whosonfirst.org/id/102087579) and [Alameda](https://spelunker.whosonfirst.org/id/102086959) counties in the sub-directory for [California](https://spelunker.whosonfirst.org/id/85688637) in the [whosonfirst-external-foursquare-venue-us](https://github.com/whosonfirst-data/whosonfirst-external-foursquare-venue-us) repository:
+
+```
+$> ./bin/walk-sorted \
+	-mode any \
+	-ancestor-id 102087579 \
+	-ancestor-id 102086959 \
+	/usr/local/data/foursquare/whosonfirst/whosonfirst-external-foursquare-venue-us/data/85688637/ \
+	| wc -l
+	
+  248631
+```
 
 ## See also
 
