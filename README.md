@@ -149,6 +149,7 @@ go build -mod vendor -ldflags="-s -w" -o bin/iterate cmd/iterate/main.go
 go build -mod vendor -ldflags="-s -w" -o bin/assign-ancestors cmd/assign-ancestors/main.go
 go build -mod vendor -ldflags="-s -w" -o bin/sort-ancestors cmd/sort-ancestors/main.go
 go build -mod vendor -ldflags="-s -w" -o bin/walk-sorted cmd/walk-sorted/main.go
+go build -mod vendor -ldflags="-s -w" -o bin/compile-area cmd/compile-area/main.go
 ```
 
 ### iterate
@@ -297,6 +298,121 @@ $> ./bin/walk-sorted \
 	| wc -l
 	
   248631
+```
+
+### compile-area
+
+Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources. Ancestry ources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files. The output is a new GeoParquet file.
+
+```
+$> > ./bin/compile-area -h
+Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources. Ancestry ources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files. The output is a new GeoParquet file.
+Usage:
+	 ./bin/compile-area uri(N) uri(N)
+  -ancestor-id value
+    	Zero or more "wof:hierarchies" values to match.
+  -external-id-key string
+    	The name of the unique identifier key for an external data source.
+  -external-source string
+    	The string to pass to the DuckDB 'read_parquet' command for reading an external data source.
+  -geohash string
+    	An optional geohash to do a prefix-first comparison against.
+  -mode string
+    	Indicate whether all or any filter criteria must match. Valid options are: any, all. (default "all")
+  -parent-id value
+    	One or more "wof:parent_id" values to match.
+  -target string
+    	The path where the final GeoParquet file should be written.
+  -verbose
+    	Enable verbose (debug) logging.
+```
+
+For example, to create a new GeoParquet file (called `sfba.geoparquet`) all the Foursquare venues in [San Francisco](https://spelunker.whosonfirst.org/id/102087579), [Alameda](https://spelunker.whosonfirst.org/id/102086959) and [San Mateo](https://spelunker.whosonfirst.org/id/102085387) counties, merged with their Who's On First ancestry data, in the sub-directory for [California](https://spelunker.whosonfirst.org/id/85688637) in the [whosonfirst-external-foursquare-venue-us](https://github.com/whosonfirst-data/whosonfirst-external-foursquare-venue-us) repository:
+
+```
+$> ./bin/compile-area \
+	-external-source "/usr/local/data/foursquare/parquet/*.parquet" \
+	-external-id-key fsq_place_id \
+	-mode any \
+	-ancestor-id 102087579 \
+	-ancestor-id 102086959 \
+	-ancestor-id 102085387 \
+	-target sfba.parquet \
+	/usr/local/data/foursquare/whosonfirst/whosonfirst-external-foursquare-venue-us/data/85688637
+```
+
+Investigate the `sfba.parquet` file:
+
+```
+$> du -h sfba.parquet 
+ 34M	sfba.parquet
+ 
+$> duckdb
+v1.1.3 19864453f7
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+D DESCRIBE (SELECT * FROM read_parquet('sfba.parquet'));
+┌─────────────────────┬────────────────────────────────────────────────────────────┬─────────┬─────────┬─────────┬─────────┐
+│     column_name     │                        column_type                         │  null   │   key   │ default │  extra  │
+│       varchar       │                          varchar                           │ varchar │ varchar │ varchar │ varchar │
+├─────────────────────┼────────────────────────────────────────────────────────────┼─────────┼─────────┼─────────┼─────────┤
+│ fsq_place_id        │ VARCHAR                                                    │ YES     │         │         │         │
+│ name                │ VARCHAR                                                    │ YES     │         │         │         │
+│ latitude            │ DOUBLE                                                     │ YES     │         │         │         │
+│ longitude           │ DOUBLE                                                     │ YES     │         │         │         │
+│ address             │ VARCHAR                                                    │ YES     │         │         │         │
+│ locality            │ VARCHAR                                                    │ YES     │         │         │         │
+│ region              │ VARCHAR                                                    │ YES     │         │         │         │
+│ postcode            │ VARCHAR                                                    │ YES     │         │         │         │
+│ admin_region        │ VARCHAR                                                    │ YES     │         │         │         │
+│ post_town           │ VARCHAR                                                    │ YES     │         │         │         │
+│ po_box              │ VARCHAR                                                    │ YES     │         │         │         │
+│ country             │ VARCHAR                                                    │ YES     │         │         │         │
+│ date_created        │ VARCHAR                                                    │ YES     │         │         │         │
+│ date_refreshed      │ VARCHAR                                                    │ YES     │         │         │         │
+│ date_closed         │ VARCHAR                                                    │ YES     │         │         │         │
+│ tel                 │ VARCHAR                                                    │ YES     │         │         │         │
+│ website             │ VARCHAR                                                    │ YES     │         │         │         │
+│ email               │ VARCHAR                                                    │ YES     │         │         │         │
+│ facebook_id         │ BIGINT                                                     │ YES     │         │         │         │
+│ instagram           │ VARCHAR                                                    │ YES     │         │         │         │
+│ twitter             │ VARCHAR                                                    │ YES     │         │         │         │
+│ fsq_category_ids    │ VARCHAR[]                                                  │ YES     │         │         │         │
+│ fsq_category_labels │ VARCHAR[]                                                  │ YES     │         │         │         │
+│ geom                │ BLOB                                                       │ YES     │         │         │         │
+│ bbox                │ STRUCT(xmin DOUBLE, ymin DOUBLE, xmax DOUBLE, ymax DOUBLE) │ YES     │         │         │         │
+│ geohash             │ VARCHAR                                                    │ YES     │         │         │         │
+│ wof:country         │ VARCHAR                                                    │ YES     │         │         │         │
+│ wof:parent_id       │ BIGINT                                                     │ YES     │         │         │         │
+│ wof:hierarchies     │ VARCHAR                                                    │ YES     │         │         │         │
+├─────────────────────┴────────────────────────────────────────────────────────────┴─────────┴─────────┴─────────┴─────────┤
+│ 29 rows                                                                                                        6 columns │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+And then query for all the restaurants in the [Temescal](https://spelunker.whosonfirst.org/id/85872391) neighbourhood:
+
+```
+D SELECT fsq_place_id, name, address, JSON("wof:hierarchies")[0].neighbourhood_id AS neighbourhood, latitude, longitude, date_closed FROM read_parquet('sfba.parquet') WHERE neighbourhood=85872391 AND JSON(fsq_category_labels)[0]  LIKE '%Dining and Drinking > Restaurant%';
+┌──────────────────────────┬───────────────────────────────────┬──────────────────────────┬───────────────┬────────────────────┬─────────────────────┬─────────────┐
+│       fsq_place_id       │               name                │         address          │ neighbourhood │      latitude      │      longitude      │ date_closed │
+│         varchar          │              varchar              │         varchar          │     json      │       double       │       double        │   varchar   │
+├──────────────────────────┼───────────────────────────────────┼──────────────────────────┼───────────────┼────────────────────┼─────────────────────┼─────────────┤
+│ 55663e24498ed3e6077e2282 │ Rosamunde Sausage Grill           │ 4659 Telegraph Ave       │ 85872391      │  37.83422562297274 │ -122.26336365164984 │ 2017-11-14  │
+│ 58a90c051e1de51e677d81e9 │ EZ Taqueria                       │ 4013 Telegraph Ave       │ 85872391      │  37.82956442174899 │ -122.26453047653766 │             │
+│ 5334870a498e4600b3af150b │ KOREAN WOOD CHARCOAL BBQ.         │ 4390 Telegraph Ave Ste J │ 85872391      │  37.83205171569861 │ -122.26316650636586 │             │
+│ 590003af32b61d706e013649 │ Bunaburger                        │ 4901 Telegraph Ave       │ 85872391      │  37.83594921355949 │ -122.26303233878318 │ 2018-12-04  │
+│ 574b5f00498e40ec765fba16 │ Azit                              │ 4390 Telegraph Ave       │ 85872391      │  37.83201381681889 │ -122.26323610358418 │             │
+│ 4a1b0a82f964a520c27a1fe3 │ Koryo Ja Jang                     │ 4390 Telegraph Ave       │ 85872391      │  37.83219705852519 │ -122.26354821183742 │ 2023-11-25  │
+...
+│ 5b207871a92d980039bf5bc8 │ Hancook                           │ 4315 Telegraph Ave       │ 85872391      │  37.83181924223889 │ -122.26408627115096 │             │
+│ 4acfef69f964a520f9d620e3 │ Chef Yu - Yuyu Za Zang            │ 4871 Telegraph Ave       │ 85872391      │  37.83540380302543 │ -122.26297108197923 │             │
+│ 6681fe8a198ecd288f03d609 │ Small Change Oyster Bar           │ 5000 Telegraph ave       │ 85872391      │          37.836433 │         -122.262268 │             │
+│ 534dcb8f11d216d6de8875bf │ Koryo Kalbi                       │ 4390 Telegraph Ave Ste J │ 85872391      │  37.83210754394531 │ -122.26309967041016 │             │
+├──────────────────────────┴───────────────────────────────────┴──────────────────────────┴───────────────┴────────────────────┴─────────────────────┴─────────────┤
+│ 93 rows (40 shown)                                                                                                                                     7 columns │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## See also
