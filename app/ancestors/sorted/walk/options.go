@@ -12,7 +12,7 @@ type RunOptions struct {
 	GeoHash     string
 	ParentIds   []int64
 	AncestorIds []int64
-	Mode string
+	Mode        string
 }
 
 func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
@@ -27,7 +27,7 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 		GeoHash:     geohash,
 		ParentIds:   parent_ids,
 		AncestorIds: ancestor_ids,
-		Mode: mode,
+		Mode:        mode,
 	}
 
 	return opts, nil

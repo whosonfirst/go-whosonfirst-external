@@ -2,8 +2,8 @@ package walk
 
 import (
 	"compress/bzip2"
-	"crypto/sha256"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	
+
 	"github.com/sfomuseum/go-csvdict/v2"
 )
 
@@ -46,9 +46,9 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 	}
 
 	ancestors_cache := new(sync.Map)
-	
+
 	var csv_wr *csvdict.Writer
-	
+
 	for _, path := range opts.Sources {
 
 		to_walk := os.DirFS(path)
@@ -60,13 +60,13 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			}
 
 			has_match := true
-			
+
 			if opts.GeoHash != "" {
 
 				if strings.HasPrefix(row["geohash"], opts.GeoHash) {
 					has_match = true
 				} else {
-					
+
 					has_match = false
 
 					if opts.Mode != mode_any {
@@ -84,48 +84,48 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 					if opts.Mode != mode_any {
 						continue
 					}
-					
+
 				} else {
 
 					parent_id, err := strconv.ParseInt(row["wof:parent_id"], 10, 64)
-					
+
 					if err != nil {
-						
+
 						slog.Warn("Failed to parse parent ID, skipping", "parent id", row["wof:parent_id"], "error", err)
 
 						has_match = false
-						
+
 						if opts.Mode != mode_any {
 							continue
 						}
-						
+
 					} else {
-					
+
 						if slices.Contains(opts.ParentIds, parent_id) {
 							has_match = true
 						} else {
-							
+
 							has_match = false
-							
+
 							if opts.Mode != mode_any {
 								continue
-							}					
+							}
 						}
 					}
 				}
-				
+
 			}
 
 			if len(opts.AncestorIds) > 0 {
 
 				if row["wof:hierarchies"] == "" {
-					
+
 					has_match = false
-					
+
 					if opts.Mode != mode_any {
 						continue
-					}					
-					
+					}
+
 				} else {
 
 					// START OF cache me...
@@ -134,32 +134,32 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 					hierarchies_k := fmt.Sprintf("%s", hierarchies_sum)
 
 					possible := make([]int64, 0)
-					
+
 					v, ok := ancestors_cache.Load(hierarchies_k)
 
 					if ok {
 						possible = v.([]int64)
 					} else {
-						
+
 						var hierarchies []map[string]int64
-						
+
 						err := json.Unmarshal([]byte(row["wof:hierarchies"]), &hierarchies)
-						
+
 						if err != nil {
 							slog.Warn("Failed to unmarshal hierarchies, skipping", "error", err)
-							
+
 							has_match = false
-							
+
 							if opts.Mode != mode_any {
 								continue
-							}					
-							
+							}
+
 						} else {
-							
+
 							for _, h := range hierarchies {
-								
+
 								for _, id := range h {
-									
+
 									if !slices.Contains(possible, id) {
 										possible = append(possible, id)
 									}
@@ -169,53 +169,53 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 						ancestors_cache.Store(hierarchies_k, possible)
 					}
-					
+
 					// END OF cache me...
-						
+
 					has_ancestor := false
-					
+
 					for _, id := range possible {
-						
+
 						if slices.Contains(opts.AncestorIds, id) {
-								has_ancestor = true
-								break
-							}
+							has_ancestor = true
+							break
 						}
-						
-						if has_ancestor {
-							has_match = true
-						} else {
-							
-							has_match = false
-							
-							if opts.Mode != mode_any {
-								continue
-							}					
+					}
+
+					if has_ancestor {
+						has_match = true
+					} else {
+
+						has_match = false
+
+						if opts.Mode != mode_any {
+							continue
 						}
+					}
 				}
 			}
-			
+
 			if !has_match {
 				continue
 			}
-			
+
 			if csv_wr == nil {
-				
+
 				wr, err := csvdict.NewWriter(os.Stdout)
-				
+
 				if err != nil {
 					return fmt.Errorf("Failed to create new CSV writer, %w", err)
 				}
-				
+
 				csv_wr = wr
 			}
-			
+
 			csv_wr.WriteRow(row)
 			csv_wr.Flush()
-		}		
+		}
 	}
 
-	return nil	
+	return nil
 }
 
 func walkFS(ctx context.Context, to_walk fs.FS) iter.Seq2[map[string]string, error] {
