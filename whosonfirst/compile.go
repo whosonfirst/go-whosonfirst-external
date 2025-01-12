@@ -3,6 +3,8 @@ package whosonfirst
 import (
 	"context"
 	"io"
+	"log/slog"
+	"sync"
 
 	"github.com/sfomuseum/go-csvdict/v2"
 )
@@ -26,34 +28,77 @@ func Compile(ctx context.Context, opts *CompileOptions, wr io.Writer) error {
 
 	var csv_wr *csvdict.Writer
 
+	mu := new(sync.RWMutex)
+
+	done_ch := make(chan bool)
+	err_ch := make(chan error)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	for _, uri := range opts.Sources {
 
-		for row, err := range Read(ctx, uri, match_opts) {
+		go func(uri string) {
 
-			if err != nil {
-				return err
-			}
+			defer func() {
+				slog.Info("Finished compiling", "uri", uri)
+				done_ch <- true
+			}()
 
-			if csv_wr == nil {
-
-				new_wr, err := csvdict.NewWriter(wr)
+			for row, err := range Read(ctx, uri, match_opts) {
 
 				if err != nil {
-					return err
+					err_ch <- err
+					return
 				}
 
-				csv_wr = new_wr
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					// pass
+				}
+
+				mu.Lock()
+				// defer mu.Unlock()
+
+				if csv_wr == nil {
+
+					new_wr, err := csvdict.NewWriter(wr)
+
+					if err != nil {
+						mu.Unlock()
+						err_ch <- err
+						return
+					}
+
+					csv_wr = new_wr
+				}
+
+				err = csv_wr.WriteRow(row)
+
+				if err != nil {
+					mu.Unlock()
+					err_ch <- err
+					return
+				}
+
+				csv_wr.Flush()
+				mu.Unlock()
 			}
 
-			err = csv_wr.WriteRow(row)
+		}(uri)
+	}
 
-			if err != nil {
-				return err
-			}
+	remaining := len(opts.Sources)
 
-			csv_wr.Flush()
+	for remaining > 0 {
+		select {
+		case <-done_ch:
+			remaining -= 1
+		case err := <-err_ch:
+			return err
 		}
-
 	}
 
 	return nil

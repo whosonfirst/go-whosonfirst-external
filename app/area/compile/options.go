@@ -15,6 +15,7 @@ type RunOptions struct {
 	Mode           string
 	Target         string
 	ExternalSource string
+	ExternalIdKey  string
 }
 
 func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
@@ -22,8 +23,15 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 	flagset.Parse(fs)
 
 	opts := &RunOptions{
-		Verbose: verbose,
-		Sources: fs.Args(),
+		Target:         target,
+		ExternalSource: external_source,
+		ExternalIdKey:  external_id_key,
+		Sources:        fs.Args(),
+		Geohash:        geohash,
+		ParentIds:      parent_ids,
+		AncestorIds:    ancestor_ids,
+		Mode:           mode,
+		Verbose:        verbose,
 	}
 
 	return opts, nil

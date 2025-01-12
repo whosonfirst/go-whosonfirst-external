@@ -4,3 +4,5 @@ bin
 work
 go.work
 .DS_Store
+*.parquet
+*.csv

@@ -7,6 +7,7 @@ cli:
 	go build -mod $(GOMOD) -ldflags="$(LDFLAGS)" -o bin/assign-ancestors cmd/assign-ancestors/main.go
 	go build -mod $(GOMOD) -ldflags="$(LDFLAGS)" -o bin/sort-ancestors cmd/sort-ancestors/main.go
 	go build -mod $(GOMOD) -ldflags="$(LDFLAGS)" -o bin/walk-sorted cmd/walk-sorted/main.go
+	go build -mod $(GOMOD) -ldflags="$(LDFLAGS)" -o bin/compile-area cmd/compile-area/main.go
 
 # https://github.com/marcboeker/go-duckdb?tab=readme-ov-file#vendoring
 modvendor:

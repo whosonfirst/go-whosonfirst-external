@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"iter"
+	_ "log/slog"
 	"os"
 
 	"github.com/sfomuseum/go-csvdict/v2"
