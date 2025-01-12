@@ -327,7 +327,7 @@ Usage:
     	Enable verbose (debug) logging.
 ```
 
-For example, to create a new GeoParquet file (called `sfba.geoparquet`) all the Foursquare venues in [San Francisco](https://spelunker.whosonfirst.org/id/102087579), [Alameda](https://spelunker.whosonfirst.org/id/102086959) and [San Mateo](https://spelunker.whosonfirst.org/id/102085387) counties, merged with their Who's On First ancestry data, in the sub-directory for [California](https://spelunker.whosonfirst.org/id/85688637) in the [whosonfirst-external-foursquare-venue-us](https://github.com/whosonfirst-data/whosonfirst-external-foursquare-venue-us) repository:
+For example, to create a new GeoParquet file (called `sfba.parquet`) for all the Foursquare venues in [San Francisco](https://spelunker.whosonfirst.org/id/102087579), [Alameda](https://spelunker.whosonfirst.org/id/102086959) and [San Mateo](https://spelunker.whosonfirst.org/id/102085387) counties, merged with their Who's On First ancestry data, in the sub-directory for [California](https://spelunker.whosonfirst.org/id/85688637) in the [whosonfirst-external-foursquare-venue-us](https://github.com/whosonfirst-data/whosonfirst-external-foursquare-venue-us) repository:
 
 ```
 $> ./bin/compile-area \
