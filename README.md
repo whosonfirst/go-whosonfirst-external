@@ -302,17 +302,17 @@ $> ./bin/walk-sorted \
 
 ### compile-area
 
-Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources. Ancestry ources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files. The output is a new GeoParquet file.
+Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources in to a new GeoParquet file. Ancestry sources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files.
 
 ```
-$> > ./bin/compile-area -h
-Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources. Ancestry ources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files. The output is a new GeoParquet file.
+$> ./bin/compile-area -h
+Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources in to a new GeoParquet file. Ancestry sources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files.
 Usage:
 	 ./bin/compile-area uri(N) uri(N)
   -ancestor-id value
     	Zero or more "wof:hierarchies" values to match.
   -external-id-key string
-    	The name of the unique identifier key for an external data source.
+    	The name of the unique identifier key for an external data source. The output is a new GeoParquet file.xs
   -external-source string
     	The string to pass to the DuckDB 'read_parquet' command for reading an external data source.
   -geohash string

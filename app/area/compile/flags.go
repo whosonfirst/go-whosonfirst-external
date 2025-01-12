@@ -36,7 +36,7 @@ func DefaultFlagSet() *flag.FlagSet {
 	fs.BoolVar(&verbose, "verbose", false, "Enable verbose (debug) logging.")
 
 	fs.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources. Ancestry ources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files.\n")
+		fmt.Fprintf(os.Stderr, "Merge GeoParquet data for an external data source with one or more Who's On First ancestry sources in to a new GeoParquet file. Ancestry sources can either be individual whosonfirst-external-* bzip2-compressed CSV files or folders containing one or more bzip2-compressed CSV files.\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n\t %s uri(N) uri(N)\n", os.Args[0])
 		fs.PrintDefaults()
 	}
