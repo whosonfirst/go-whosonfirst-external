@@ -415,6 +415,52 @@ D SELECT fsq_place_id, name, address, JSON("wof:hierarchies")[0].neighbourhood_i
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### area-whosonfirst-properties
+
+Derive Who's On First properties for an "area" parquet file (produced by by the `compile-area` tool).
+
+```
+$> ./bin/area-whosonfirst-properties -h
+Derive Who's On First properties for an "area" parquet file (produced by by the `compile-area` tool).
+Usage:
+	 ./bin/area-whosonfirst-properties [options]
+  -area-parquet compile-area
+    	The URI for the "area" parquet file (produced by by the compile-area tool) from which Who's On First properties will be derived.
+  -reader-uri string
+    	A registered whosonfirst/go-reader.Reader URI. (default "https://data.whosonfirst.org")
+  -verbose
+    	Enable verbose (debug) logging.
+  -whosonfirst-parquet string
+    	The URI for the parquet file where Who's On First properties will be written to.
+```
+
+For example:
+
+```
+$> area-whosonfirst-properties/main.go \
+	-area-parquet sfba.parquet \
+	-whosonfirst-parquet whosonfirst.parquet
+```
+
+And then:
+
+```
+$> duckdb
+v1.1.3 19864453f7
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+
+D LOAD spatial;
+D SELECT id, name, ST_AsText(geometry) FROM read_parquet('whosonfirst.parquet') LIMIT 1;
+┌──────────┬──────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│    id    │     name     │                                                                           st_astext(geometry)                                                                            │
+│  int32   │   varchar    │                                                                                 varchar                                                                                  │
+├──────────┼──────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 85866851 │ Union Square │ POLYGON ((-122.40238 37.790969, -122.40196 37.788922, -122.402066 37.788721, -122.408952 37.783288, -122.409142 37.783519, -122.410433 37.789951, -122.40238 37.790969)) │
+└──────────┴──────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
 ## See also
 
 * https://github.com/whosonfirst/go-whosonfirst-spatial

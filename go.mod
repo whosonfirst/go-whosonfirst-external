@@ -15,6 +15,7 @@ require (
 	github.com/sfomuseum/go-flags v0.10.0
 	github.com/whosonfirst/go-reader v1.0.2
 	github.com/whosonfirst/go-reader-database-sql v0.2.0
+	github.com/whosonfirst/go-reader-http v0.3.1
 	github.com/whosonfirst/go-whosonfirst-feature v0.0.28
 	github.com/whosonfirst/go-whosonfirst-reader v1.0.2
 	github.com/whosonfirst/go-whosonfirst-spatial v0.11.1
