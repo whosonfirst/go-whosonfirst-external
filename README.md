@@ -432,6 +432,8 @@ Usage:
     	Enable verbose (debug) logging.
   -whosonfirst-parquet string
     	The URI for the parquet file where Who's On First properties will be written to.
+  -with-spatial-geom
+    	Store geometry property as spatial GEOMETRY type (rather than TEXT.	
 ```
 
 For example:
@@ -451,15 +453,16 @@ Enter ".help" for usage hints.
 Connected to a transient in-memory database.
 Use ".open FILENAME" to reopen on a persistent database.
 
-D LOAD spatial;
-D SELECT id, name, ST_AsText(geometry) FROM read_parquet('whosonfirst.parquet') LIMIT 1;
-┌──────────┬──────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│    id    │     name     │                                                                           st_astext(geometry)                                                                            │
-│  int32   │   varchar    │                                                                                 varchar                                                                                  │
-├──────────┼──────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ 85866851 │ Union Square │ POLYGON ((-122.40238 37.790969, -122.40196 37.788922, -122.402066 37.788721, -122.408952 37.783288, -122.409142 37.783519, -122.410433 37.789951, -122.40238 37.790969)) │
-└──────────┴──────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+D SELECT id, name, geometry FROM read_parquet('whosonfirst.parquet') LIMIT 1;
+┌──────────┬─────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│    id    │      name       │                                                                                  geometry                                                                                   │
+│  int32   │     varchar     │                                                                                   varchar                                                                                   │
+├──────────┼─────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 85872355 │ Piedmont Avenue │ {"type":"MultiPolygon","coordinates":[[[[-122.243389,37.830281],[-122.24419,37.829481],[-122.244891,37.82878],[-122.245192,37.828481],[-122.245421,37.828318],[-122.24589…  │
+└──────────┴─────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+Note: The default behaviour is to store geoemtry information as a JSON-encoded GeoJSON `geometry`. If you need or want native DuckDB spatial types run the tool with the `-with-spatial-geom` flag.
 
 ## See also
 

@@ -11,6 +11,7 @@ type RunOptions struct {
 	AreaParquet        string
 	WhosOnFirstParquet string
 	ReaderURI          string
+	WithSpatialGeom    bool
 }
 
 func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
@@ -21,6 +22,7 @@ func RunOptionsFromFlagSet(fs *flag.FlagSet) (*RunOptions, error) {
 		AreaParquet:        area_parquet,
 		WhosOnFirstParquet: whosonfirst_parquet,
 		ReaderURI:          reader_uri,
+		WithSpatialGeom:    with_spatial_geom,
 		Verbose:            verbose,
 	}
 

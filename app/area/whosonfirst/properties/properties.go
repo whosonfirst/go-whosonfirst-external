@@ -61,16 +61,28 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		return fmt.Errorf("Failed to create new reader, %w", err)
 	}
 
-	err = sfom_sql.LoadDuckDBExtensions(ctx, db, "SPATIAL")
+	if opts.WithSpatialGeom {
 
-	if err != nil {
-		return fmt.Errorf("Failed to load extensions, %w", err)
-	}
+		err = sfom_sql.LoadDuckDBExtensions(ctx, db, "SPATIAL")
 
-	_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "geometry" GEOMETRY)`)
+		if err != nil {
+			return fmt.Errorf("Failed to load extensions, %w", err)
+		}
 
-	if err != nil {
-		return fmt.Errorf("Failed to create temp whosonfirst table, %w", err)
+		_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "geometry" GEOMETRY)`)
+
+		if err != nil {
+			return fmt.Errorf("Failed to create temp whosonfirst table, %w", err)
+		}
+
+	} else {
+
+		_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "geometry" TEXT)`)
+
+		if err != nil {
+			return fmt.Errorf("Failed to create temp whosonfirst table, %w", err)
+		}
+
 	}
 
 	queries := []string{
@@ -138,7 +150,11 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			return fmt.Errorf("Failed to marshal geometry for %d, %w", id, err)
 		}
 
-		q := `INSERT INTO whosonfirst (id, name, geometry) VALUES(?, ?, ST_GeomFromGeoJSON(?))`
+		q := `INSERT INTO whosonfirst (id, name, geometry) VALUES(?, ?, ?)`
+
+		if opts.WithSpatialGeom {
+			q = `INSERT INTO whosonfirst (id, name, geometry) VALUES(?, ?, ST_GeomFromGeoJSON(?))`
+		}
 
 		_, err = db.ExecContext(ctx, q, id, name, string(enc_geom))
 
