@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/aaronland/go-roster v1.0.0
-	github.com/dgraph-io/ristretto/v2 v2.0.1
+	github.com/dgraph-io/ristretto/v2 v2.1.0
 	github.com/json-iterator/go v1.1.12
 	github.com/marcboeker/go-duckdb v1.8.3
 	github.com/mattn/go-sqlite3 v1.14.24
@@ -18,7 +18,7 @@ require (
 	github.com/whosonfirst/go-reader-http v0.3.1
 	github.com/whosonfirst/go-whosonfirst-feature v0.0.28
 	github.com/whosonfirst/go-whosonfirst-reader v1.0.2
-	github.com/whosonfirst/go-whosonfirst-spatial v0.11.1
+	github.com/whosonfirst/go-whosonfirst-spatial v0.12.0
 	github.com/whosonfirst/go-whosonfirst-spatial-pmtiles v0.7.0
 )
 
@@ -167,7 +167,7 @@ require (
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
