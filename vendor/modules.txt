@@ -390,7 +390,7 @@ github.com/cenkalti/backoff/v4
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/dgraph-io/ristretto/v2 v2.0.1
+# github.com/dgraph-io/ristretto/v2 v2.1.0
 ## explicit; go 1.21
 github.com/dgraph-io/ristretto/v2
 github.com/dgraph-io/ristretto/v2/z
@@ -712,7 +712,7 @@ github.com/whosonfirst/go-whosonfirst-reader
 ## explicit; go 1.12
 github.com/whosonfirst/go-whosonfirst-sources
 github.com/whosonfirst/go-whosonfirst-sources/sources
-# github.com/whosonfirst/go-whosonfirst-spatial v0.11.1
+# github.com/whosonfirst/go-whosonfirst-spatial v0.12.0
 ## explicit; go 1.23
 github.com/whosonfirst/go-whosonfirst-spatial
 github.com/whosonfirst/go-whosonfirst-spatial/database
@@ -871,7 +871,7 @@ golang.org/x/oauth2/jwt
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.28.0
+# golang.org/x/sys v0.29.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/plan9

@@ -69,7 +69,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 			return fmt.Errorf("Failed to load extensions, %w", err)
 		}
 
-		_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "geometry" GEOMETRY)`)
+		_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "placetype" TEXT, "geometry" GEOMETRY)`)
 
 		if err != nil {
 			return fmt.Errorf("Failed to create temp whosonfirst table, %w", err)
@@ -77,7 +77,7 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 
 	} else {
 
-		_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "geometry" TEXT)`)
+		_, err = db.ExecContext(ctx, `CREATE TEMP TABLE whosonfirst ("id" INTEGER NOT NULL, "name" TEXT, "placetype" TEXT, "geometry" TEXT)`)
 
 		if err != nil {
 			return fmt.Errorf("Failed to create temp whosonfirst table, %w", err)
@@ -124,48 +124,70 @@ func RunWithOptions(ctx context.Context, opts *RunOptions) error {
 		}
 	}
 
+	slog.Debug("Who's On First IDs to fetch", "count", len(wof_ids))
+	
 	for _, id := range wof_ids {
 
+		logger := slog.Default()
+		logger = logger.With("id", id)
+
+		logger.Debug("Fetch ID")
+		
 		body, err := wof_reader.LoadBytes(ctx, r, id)
 
 		if err != nil {
+			logger.Error("Failed to load record", "error", err)
 			return fmt.Errorf("Failed to load body for %d, %w", id, err)
 		}
 
 		name, err := properties.Name(body)
 
 		if err != nil {
+			logger.Error("Failed to derive name", "error", err)			
 			return fmt.Errorf("Failed to derive name for %d, %w", id, err)
 		}
 
+		pt, err := properties.Placetype(body)
+
+		if err != nil {
+			logger.Error("Failed to derive placetype", "error", err)			
+			return fmt.Errorf("Failed to derive placetype for %d, %w", id, err)
+		}
+		
 		geom, err := geometry.Geometry(body)
 
 		if err != nil {
+			logger.Error("Failed to derive geometry", "error", err)
 			return fmt.Errorf("Failed to derive geometry for %d, %w", id, err)
 		}
 
 		enc_geom, err := geom.MarshalJSON()
 
 		if err != nil {
+			logger.Error("Failed to marshal geometry", "error", err)			
 			return fmt.Errorf("Failed to marshal geometry for %d, %w", id, err)
 		}
 
-		q := `INSERT INTO whosonfirst (id, name, geometry) VALUES(?, ?, ?)`
+		q := `INSERT INTO whosonfirst (id, name, placetype, geometry) VALUES(?, ?, ?, ?)`
 
 		if opts.WithSpatialGeom {
-			q = `INSERT INTO whosonfirst (id, name, geometry) VALUES(?, ?, ST_GeomFromGeoJSON(?))`
+			q = `INSERT INTO whosonfirst (id, name, placetype, geometry) VALUES(?, ?, ?, ST_GeomFromGeoJSON(?))`
 		}
 
-		_, err = db.ExecContext(ctx, q, id, name, string(enc_geom))
+		_, err = db.ExecContext(ctx, q, id, name, pt, string(enc_geom))
 
 		if err != nil {
+			logger.Error("Failed to add record", "error", err)
 			return fmt.Errorf("Failed to add row for %d, %w", id, err)
 		}
 	}
 
+	slog.Debug("Copy temporary database", "target", opts.WhosOnFirstParquet)
+	
 	_, err = db.ExecContext(ctx, fmt.Sprintf(`COPY (SELECT * FROM whosonfirst) TO '%s' (COMPRESSION ZSTD)`, opts.WhosOnFirstParquet))
 
 	if err != nil {
+		slog.Error("Failed to copy database", "error", err)
 		return fmt.Errorf("Failed to copy table to disk, %w", err)
 	}
 
