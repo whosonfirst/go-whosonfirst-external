@@ -26,12 +26,20 @@ func conversionError(actual int, min int, max int) error {
 	return fmt.Errorf("%s: cannot convert %d, minimum: %d, maximum: %d", convertErrMsg, actual, min, max)
 }
 
+func invalidInputError(actual string, expected string) error {
+	return fmt.Errorf("%s: expected %s, got %s", invalidInputErrMsg, expected, actual)
+}
+
 func structFieldError(actual string, expected string) error {
 	return fmt.Errorf("%s: expected %s, got %s", structFieldErrMsg, expected, actual)
 }
 
 func columnCountError(actual int, expected int) error {
 	return fmt.Errorf("%s: expected %d, got %d", columnCountErrMsg, expected, actual)
+}
+
+func paramIndexError(idx int, max uint64) error {
+	return fmt.Errorf("%s: %d is out of range [1, %d]", paramIndexErrMsg, idx, max)
 }
 
 func unsupportedTypeError(name string) error {
@@ -66,6 +74,7 @@ const (
 	duckdbErrMsg           = "duckdb error"
 	castErrMsg             = "cast error"
 	convertErrMsg          = "conversion error"
+	invalidInputErrMsg     = "invalid input"
 	structFieldErrMsg      = "invalid STRUCT field"
 	columnCountErrMsg      = "invalid column count"
 	unsupportedTypeErrMsg  = "unsupported data type"
@@ -75,6 +84,7 @@ const (
 	unknownTypeErrMsg      = "unknown type"
 	interfaceIsNilErrMsg   = "interface is nil"
 	duplicateNameErrMsg    = "duplicate name"
+	paramIndexErrMsg       = "invalid parameter index"
 )
 
 var (
@@ -90,9 +100,15 @@ var (
 	errInvalidCon = errors.New("not a DuckDB driver connection")
 	errClosedCon  = errors.New("closed connection")
 
+	errClosedStmt        = errors.New("closed statement")
+	errUninitializedStmt = errors.New("uninitialized statement")
+
 	errPrepare                    = errors.New("could not prepare query")
 	errMissingPrepareContext      = errors.New("missing context for multi-statement query: try using PrepareContext")
 	errEmptyQuery                 = errors.New("empty query")
+	errCouldNotBind               = errors.New("could not bind parameter")
+	errActiveRows                 = errors.New("ExecContext or QueryContext with active Rows")
+	errNotBound                   = errors.New("parameters have not been bound")
 	errBeginTx                    = errors.New("could not begin transaction")
 	errMultipleTx                 = errors.New("multiple transactions")
 	errReadOnlyTxNotSupported     = errors.New("read-only transactions are not supported")
@@ -109,6 +125,7 @@ var (
 	errEmptyName             = errors.New("empty name")
 	errInvalidDecimalWidth   = fmt.Errorf("the DECIMAL with must be between 1 and %d", max_decimal_width)
 	errInvalidDecimalScale   = errors.New("the DECIMAL scale must be less than or equal to the width")
+	errInvalidArraySize      = errors.New("invalid ARRAY size")
 	errSetSQLNULLValue       = errors.New("cannot write to a NULL column")
 
 	errScalarUDFCreate          = errors.New("could not create scalar UDF")

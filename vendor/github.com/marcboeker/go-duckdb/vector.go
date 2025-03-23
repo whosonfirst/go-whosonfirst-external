@@ -46,6 +46,15 @@ func (vec *vector) init(logicalType C.duckdb_logical_type, colIdx int) error {
 		return addIndexToError(unsupportedTypeError(name), colIdx)
 	}
 
+	cStr := C.duckdb_logical_type_get_alias(logicalType)
+	alias := C.GoString(cStr)
+	C.duckdb_free(unsafe.Pointer(cStr))
+	switch alias {
+	case aliasJSON:
+		vec.initJSON()
+		return nil
+	}
+
 	switch t {
 	case TYPE_BOOLEAN:
 		initBool(vec)
@@ -91,6 +100,8 @@ func (vec *vector) init(logicalType C.duckdb_logical_type, colIdx int) error {
 		return vec.initStruct(logicalType, colIdx)
 	case TYPE_MAP:
 		return vec.initMap(logicalType, colIdx)
+	case TYPE_ARRAY:
+		return vec.initArray(logicalType, colIdx)
 	case TYPE_UUID:
 		vec.initUUID()
 	case TYPE_SQLNULL:
@@ -134,6 +145,9 @@ func (vec *vector) getChildVectors(v C.duckdb_vector, writable bool) {
 			child := C.duckdb_struct_vector_get_child(v, C.idx_t(i))
 			vec.childVectors[i].initVectors(child, writable)
 		}
+	case TYPE_ARRAY:
+		child := C.duckdb_array_vector_get_child(v)
+		vec.childVectors[0].initVectors(child, writable)
 	}
 }
 
@@ -261,7 +275,7 @@ func (vec *vector) initBytes(t Type) {
 		if vec.getNull(rowIdx) {
 			return nil
 		}
-		return vec.getCString(rowIdx)
+		return vec.getBytes(rowIdx)
 	}
 	vec.setFn = func(vec *vector, rowIdx C.idx_t, val any) error {
 		if val == nil {
@@ -271,6 +285,23 @@ func (vec *vector) initBytes(t Type) {
 		return setBytes(vec, rowIdx, val)
 	}
 	vec.Type = t
+}
+
+func (vec *vector) initJSON() {
+	vec.getFn = func(vec *vector, rowIdx C.idx_t) any {
+		if vec.getNull(rowIdx) {
+			return nil
+		}
+		return vec.getJSON(rowIdx)
+	}
+	vec.setFn = func(vec *vector, rowIdx C.idx_t, val any) error {
+		if val == nil {
+			vec.setNull(rowIdx)
+			return nil
+		}
+		return setJSON(vec, rowIdx, val)
+	}
+	vec.Type = TYPE_VARCHAR
 }
 
 func (vec *vector) initDecimal(logicalType C.duckdb_logical_type, colIdx int) error {
@@ -450,6 +481,37 @@ func (vec *vector) initMap(logicalType C.duckdb_logical_type, colIdx int) error 
 		return setMap(vec, rowIdx, val)
 	}
 	vec.Type = TYPE_MAP
+	return nil
+}
+
+func (vec *vector) initArray(logicalType C.duckdb_logical_type, colIdx int) error {
+	vec.arrayLength = uint64(C.duckdb_array_type_array_size(logicalType))
+
+	// Get the child vector type.
+	childType := C.duckdb_array_type_child_type(logicalType)
+	defer C.duckdb_destroy_logical_type(&childType)
+
+	// Recurse into the child.
+	vec.childVectors = make([]vector, 1)
+	err := vec.childVectors[0].init(childType, colIdx)
+	if err != nil {
+		return err
+	}
+
+	vec.getFn = func(vec *vector, rowIdx C.idx_t) any {
+		if vec.getNull(rowIdx) {
+			return nil
+		}
+		return vec.getArray(rowIdx)
+	}
+	vec.setFn = func(vec *vector, rowIdx C.idx_t, val any) error {
+		if val == nil {
+			vec.setNull(rowIdx)
+			return nil
+		}
+		return setArray(vec, rowIdx, val)
+	}
+	vec.Type = TYPE_ARRAY
 	return nil
 }
 
