@@ -265,6 +265,24 @@ Notes:
 
 * More "workers" is not necessarily better. I _think_ this has something to do with the underlying library used to query the PMTiles database throttling requests (but I am not sure).
 * When building the PMTiles database (containing Who's On First data used for performing point-in-polygon operations) make sure to use a current (fall/winter 2024) version of `tippecanoe`.
+* This tool produces very large files. Use the `sort-ancestors` tool to split the data in to nested `{REGION_ID}/{COUNTY_CODE}-{REGION_ID}-{LOCALITY_ID}` CSV files.
+
+### sort-ancestors
+
+Sort CSV data containing external sources and their ancestors (produced by `assign-ancestors`) in to nested `{REGION_ID}/{COUNTY_CODE}-{REGION_ID}-{LOCALITY_ID}` CSV files.
+
+```
+$> ./bin/sort-ancestors -h
+Sort CSV data containing external sources and their ancestors (produced by assign-ancestors) in to nested {REGION_ID}/{COUNTY_CODE}-{REGION_ID}-{LOCALITY_ID} CSV files
+Usage:
+	 ./bin/sort-ancestors uri(N) uri(N)
+  -namespace string
+    	The namespace of the external source.
+  -target string
+    	If target is '-' then all data will be written to /dev/null (or equivalent). (default "-")
+  -verbose
+    	Enable verbose (debug) logging.
+```
 
 ### walk-sorted
 
