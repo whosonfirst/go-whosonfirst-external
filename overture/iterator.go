@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	_ "github.com/marcboeker/go-duckdb"
+	_ "github.com/marcboeker/go-duckdb/v2"
 
 	"github.com/paulmach/orb/geojson"
 	sfom_sql "github.com/sfomuseum/go-database/sql"

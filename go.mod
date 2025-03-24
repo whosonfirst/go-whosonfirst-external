@@ -6,7 +6,7 @@ require (
 	github.com/aaronland/go-roster v1.0.0
 	github.com/dgraph-io/ristretto/v2 v2.1.0
 	github.com/json-iterator/go v1.1.12
-	github.com/marcboeker/go-duckdb v1.8.5
+	github.com/marcboeker/go-duckdb/v2 v2.0.1
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/mmcloughlin/geohash v0.10.0
 	github.com/paulmach/orb v0.11.1
@@ -82,6 +82,12 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dhconnelly/rtreego v1.2.0 // indirect
 	github.com/dominikbraun/graph v0.23.0 // indirect
+	github.com/duckdb/duckdb-go-bindings v0.1.10 // indirect
+	github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.5 // indirect
+	github.com/duckdb/duckdb-go-bindings/darwin-arm64 v0.1.5 // indirect
+	github.com/duckdb/duckdb-go-bindings/linux-amd64 v0.1.5 // indirect
+	github.com/duckdb/duckdb-go-bindings/linux-arm64 v0.1.5 // indirect
+	github.com/duckdb/duckdb-go-bindings/windows-amd64 v0.1.5 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/g8rswimmer/error-chain v1.0.0 // indirect
@@ -104,6 +110,8 @@ require (
 	github.com/jtacoma/uritemplates v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/marcboeker/go-duckdb/arrowmapping v0.0.3 // indirect
+	github.com/marcboeker/go-duckdb/mapping v0.0.3 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
