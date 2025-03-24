@@ -127,20 +127,6 @@ $> go run cmd/iterate/main.go -iterator-uri 'overture://parquet/places?propertie
 ...and so on
 ```
 
-## DuckDB
-
-This package uses the [marcboeker/go-duckdb](https://github.com/marcboeker/go-duckdb?tab=readme-ov-file#vendoring) package for working with Parquet files. Because the `go-duckdb` package bundles all the plaform-specific "libduckdb.a" files it is _NOT_ included in this package's `vendor` directory (because it just makes everything too big).
-
-This introduces some obvious compile-time problems. Per the [go-duckdb documentation](https://github.com/marcboeker/go-duckdb?tab=readme-ov-file#vendoring) the best way to deal with this is to install and use the [goware/modvendor](https://github.com/goware/modvendor) tool as follows:
-
-```
-$> go install github.com/goware/modvendor@latest
-$> go mod vendor
-$> modvendor -copy="**/*.a **/*.h" -v
-```
-
-The is also a handy `modvendor` Makefile target (in this package) to make that last step easier.
-
 ## Tools
 
 ```
@@ -151,6 +137,20 @@ go build -mod vendor -ldflags="-s -w" -o bin/sort-ancestors cmd/sort-ancestors/m
 go build -mod vendor -ldflags="-s -w" -o bin/walk-sorted cmd/walk-sorted/main.go
 go build -mod vendor -ldflags="-s -w" -o bin/compile-area cmd/compile-area/main.go
 ```
+
+### Building DuckDB bindings
+
+This package uses the [marcboeker/go-duckdb/v2](https://github.com/marcboeker/go-duckdb?tab=readme-ov-file#vendoring) package for working with Parquet files. The `go-duckdb` package bundles a lot of the plaform-specific `*.a` and `*.h` files and these are _NOT_ included in this package's `vendor` directory (because they just makes everything too big).
+
+This introduces some obvious compile-time problems. Per the [go-duckdb documentation](https://github.com/marcboeker/go-duckdb?tab=readme-ov-file#vendoring) the best way to deal with this is to install and use the [goware/modvendor](https://github.com/goware/modvendor) tool as follows:
+
+```
+$> go install github.com/goware/modvendor@latest
+$> go mod vendor
+$> modvendor -copy="**/*.a **/*.h" -v
+```
+
+The is also a handy `modvendor` Makefile target (in this package) to make that last step easier.
 
 ### iterate
 
